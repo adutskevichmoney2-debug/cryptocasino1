@@ -8,6 +8,7 @@ import { useWalletStore } from "@/stores/walletStore";
 import { useNotificationsStore } from "@/stores/notificationsStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useSettingsStore } from "@/stores/settingsStore";
+import { useCasinoStore } from "@/stores/casinoStore";
 import { formatCrypto } from "@/lib/format";
 
 /**
@@ -29,11 +30,16 @@ export function AppInit() {
     void initAuth();
   }, [initAuth]);
 
-  // Wallet and notifications are per-user, so they reload whenever the session changes
+  // Wallet, notifications and favorites are per-user, so they reload whenever the session changes
   useEffect(() => {
     if (authStatus === "loading") return;
     void initWallet();
     void initNotifications();
+    if (authStatus === "authed") {
+      void useCasinoStore.getState().loadFavorites();
+    } else {
+      useCasinoStore.getState().resetFavorites();
+    }
   }, [authStatus, initWallet, initNotifications]);
 
   // Surface pending -> confirmed transitions (withdrawals confirming ~35s later)

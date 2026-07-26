@@ -77,6 +77,11 @@ export function createGamesService(): GamesService {
       return BY_SLUG.get(slug) ?? null;
     },
 
+    async getGamesByIds(ids) {
+      await delay(100, 240);
+      return ids.map((id) => BY_ID.get(id)).filter((g): g is Game => Boolean(g));
+    },
+
     async getCategories(): Promise<GameCategoryInfo[]> {
       const counts = new Map<string, number>();
       for (const g of ALL_GAMES) {

@@ -167,6 +167,7 @@ export interface GamesService {
     pageSize?: number;
   }): Promise<Paginated<Game>>;
   getGameBySlug(slug: string): Promise<Game | null>;
+  getGamesByIds(ids: string[]): Promise<Game[]>;
   getCategories(): Promise<GameCategoryInfo[]>;
   getProviders(): Promise<Provider[]>;
   getFavorites(): Promise<string[]>;
