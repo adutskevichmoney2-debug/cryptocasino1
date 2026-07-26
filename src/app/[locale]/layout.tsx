@@ -5,7 +5,6 @@ import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { MotionProvider } from "@/components/providers/MotionProvider";
-import { StoreHydration } from "@/components/providers/StoreHydration";
 import { ToastHub } from "@/components/ui/Toast";
 import { AppShell } from "@/components/layout/AppShell";
 import "@/styles/globals.css";
@@ -61,7 +60,6 @@ export default async function LocaleLayout({
             <AppShell>{children}</AppShell>
             <ToastHub />
           </MotionProvider>
-          <StoreHydration />
         </NextIntlClientProvider>
       </body>
     </html>

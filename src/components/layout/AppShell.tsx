@@ -1,11 +1,14 @@
 "use client";
 
+import { Suspense } from "react";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 import { Footer } from "./Footer";
 import { MobileTabBar } from "./MobileTabBar";
 import { MobileMenuDrawer } from "./MobileMenuDrawer";
+import { ModalRoot } from "./ModalRoot";
 import { CookieConsent } from "@/components/shared/CookieConsent";
+import { AppInit } from "@/components/providers/AppInit";
 import { useUiStore } from "@/stores/uiStore";
 import { useMounted } from "@/hooks/useMounted";
 import { cn } from "@/lib/cn";
@@ -33,6 +36,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <MobileTabBar />
       <CookieConsent />
+      <AppInit />
+      <Suspense fallback={null}>
+        <ModalRoot />
+      </Suspense>
     </div>
   );
 }
