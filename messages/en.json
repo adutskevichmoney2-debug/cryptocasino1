@@ -1,0 +1,25 @@
+{
+  "common": {
+    "appName": "CryptoCasino",
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "close": "Close",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "search": "Search",
+    "viewAll": "View all",
+    "showMore": "Show more",
+    "comingSoon": "Coming soon",
+    "demo": "Demo"
+  },
+  "auth": {
+    "login": "Sign in",
+    "register": "Sign up",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
+  }
+}

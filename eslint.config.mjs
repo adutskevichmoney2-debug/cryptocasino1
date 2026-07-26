@@ -20,6 +20,33 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    rules: {
+      // Locale-aware navigation must come from @/i18n/navigation
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "next/link",
+              message: "Import { Link } from '@/i18n/navigation' instead (locale-aware).",
+            },
+            {
+              name: "next/navigation",
+              importNames: ["useRouter", "usePathname", "redirect", "permanentRedirect"],
+              message: "Import from '@/i18n/navigation' instead (locale-aware).",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/i18n/**"],
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
 ];
 
 export default eslintConfig;

@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-manrope), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme {
+  /* ── Graphite scale (cool dark, never pure black) ─────────────── */
+  --color-graphite-950: #0a0c10;
+  --color-graphite-900: #0e1116;
+  --color-graphite-850: #12161d;
+  --color-graphite-800: #171c24;
+  --color-graphite-700: #1f2630;
+  --color-graphite-600: #2a3340;
+  --color-graphite-500: #3a4452;
+  --color-graphite-400: #55606f;
+  --color-graphite-300: #8b95a5;
+  --color-graphite-200: #a9b2bf;
+  --color-graphite-100: #d4dae2;
+  --color-graphite-50: #eef1f5;
+
+  /* ── Semantic surfaces & lines ────────────────────────────────── */
+  --color-surface-0: #0e1116;
+  --color-surface-1: #12161d;
+  --color-surface-2: #171c24;
+  --color-surface-3: #1f2630;
+  --color-surface-4: #262e39;
+  --color-line: #232b35;
+  --color-line-strong: #2a3340;
+
+  /* ── Text ─────────────────────────────────────────────────────── */
+  --color-content: #eef1f5;
+  --color-content-secondary: #a9b2bf;
+  --color-content-tertiary: #8b95a5;
+  --color-content-disabled: #55606f;
+
+  /* ── Brand accent: emerald ────────────────────────────────────── */
+  --color-accent: #10b981;
+  --color-accent-hover: #0fcf8d;
+  --color-accent-pressed: #059669;
+  --color-accent-soft: rgb(16 185 129 / 12%);
+  --color-accent-content: #04120d;
+
+  /* ── Semantic states ──────────────────────────────────────────── */
+  --color-success: #2ebd85;
+  --color-success-soft: rgb(46 189 133 / 12%);
+  --color-danger: #e5484d;
+  --color-danger-hover: #ef6b6f;
+  --color-danger-soft: rgb(229 72 77 / 12%);
+  --color-warning: #f5a524;
+  --color-warning-soft: rgb(245 165 36 / 12%);
+  --color-live: #e5484d;
+
+  /* ── Shadows (elevation + hairline highlight) ─────────────────── */
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 35%), inset 0 1px 0 rgb(255 255 255 / 3%);
+  --shadow-raised: 0 4px 12px rgb(0 0 0 / 35%), inset 0 1px 0 rgb(255 255 255 / 4%);
+  --shadow-dropdown: 0 8px 24px rgb(0 0 0 / 45%), 0 0 0 1px rgb(255 255 255 / 4%);
+  --shadow-modal: 0 16px 48px rgb(0 0 0 / 55%), 0 0 0 1px rgb(255 255 255 / 5%);
+
+  /* ── Motion ───────────────────────────────────────────────────── */
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --animate-shimmer: shimmer 1.8s linear infinite;
+  --animate-live: pulse-live 1.6s ease-in-out infinite;
+  --animate-spin-slow: spin 1.2s linear infinite;
+
+  @keyframes shimmer {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes pulse-live {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    scrollbar-color: var(--color-graphite-600) transparent;
+  }
+
+  body {
+    background-color: var(--color-surface-0);
+    color: var(--color-content);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: rgb(16 185 129 / 30%);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-graphite-600);
+    border-radius: 8px;
+    border: 2px solid var(--color-surface-0);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-graphite-500);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
