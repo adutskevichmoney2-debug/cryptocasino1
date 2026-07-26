@@ -50,7 +50,6 @@ export function CategoryView({ category }: { category: string }) {
     }
     setAccumulated(results);
     return { items: results, total };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryKey, pages]);
 
   const resetPaging = () => setPages(1);

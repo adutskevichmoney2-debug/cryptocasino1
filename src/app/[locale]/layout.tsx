@@ -23,12 +23,17 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
     default: "CryptoCasino — Online Crypto Casino & Sportsbook",
     template: "%s · CryptoCasino",
   },
   description:
     "Demo crypto casino platform: slots, live casino, sportsbook and a multi-coin crypto wallet. Portfolio project — no real money.",
+  openGraph: {
+    siteName: "CryptoCasino",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {

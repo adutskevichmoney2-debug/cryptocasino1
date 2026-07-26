@@ -30,7 +30,9 @@ function nicknameFromEmail(email: string): string {
 const readUsers = () => dbRead<StoredUser[]>(dbKeys.users, []);
 const writeUsers = (users: StoredUser[]) => dbWrite(dbKeys.users, users);
 
-function toProfile({ passwordHash: _passwordHash, ...profile }: StoredUser): UserProfile {
+function toProfile(user: StoredUser): UserProfile {
+  const { passwordHash, ...profile } = user;
+  void passwordHash;
   return profile;
 }
 
