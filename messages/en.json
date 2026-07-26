@@ -396,7 +396,70 @@
       "earnings": "Earnings"
     }
   },
+  "promotions": {
+    "subtitle": "Bonuses, cashback and races — everything a big platform runs, in demo form.",
+    "promoCode": "Promo code",
+    "promoCodePlaceholder": "Enter promo code",
+    "apply": "Apply",
+    "codeApplied": "Bonus {code} activated!",
+    "hintCodes": "Demo codes to try: WELCOME100, FREESPINS50, CASHBACK10, SPORT25",
+    "activeBonuses": "Your active bonuses",
+    "wagering": "Wagering progress",
+    "expires": "Expires {date}",
+    "claim": "Claim bonus",
+    "details": "Details",
+    "loginToClaim": "Sign in to activate bonuses",
+    "termsTitle": "Bonus terms",
+    "termsGeneric": "Demo terms: the bonus is credited instantly after activation. Wagering must be completed before the expiry date, otherwise the bonus and its winnings are void. One activation per account.",
+    "badges": {
+      "hot": "HOT",
+      "new": "NEW",
+      "sport": "SPORT"
+    },
+    "items": {
+      "welcome": {
+        "title": "Welcome Package",
+        "description": "100% match on your first deposit up to 100 USDT plus 50 free spins on selected slots."
+      },
+      "cashback": {
+        "title": "Weekly Cashback",
+        "description": "Up to 12% of net losses back every Monday, based on your VIP level. No wagering on cashback."
+      },
+      "freeSpins": {
+        "title": "Free Spins Friday",
+        "description": "Deposit on Friday and grab 50 free spins on the featured slot of the week."
+      },
+      "reload": {
+        "title": "Reload Bonus",
+        "description": "50% match on every deposit above 20 USDT, available once per day."
+      },
+      "accaBoost": {
+        "title": "Accumulator Boost",
+        "description": "Add 4+ selections to your combo bet and get up to 40% extra on top of your winnings."
+      },
+      "riskFree": {
+        "title": "Risk-Free Bet",
+        "description": "Your first sports bet up to 25 USDT is refunded as a freebet if it loses."
+      }
+    },
+    "bonuses": {
+      "welcomeBonus": "Welcome bonus",
+      "freeSpinsBonus": "Free spins bonus",
+      "cashbackBonus": "Weekly cashback",
+      "sportBonus": "Sport freebet"
+    }
+  },
   "vip": {
+    "subtitle": "Play, earn XP from every wager and unlock higher cashback and perks.",
+    "yourLevel": "Your level",
+    "nextLevel": "Next: {level}",
+    "xpLabel": "{xp} XP",
+    "maxLevel": "Maximum level reached",
+    "levelsTable": "VIP levels",
+    "level": "Level",
+    "xpRequired": "XP required",
+    "cashbackCol": "Cashback",
+    "loginHint": "Sign in to track your VIP progress",
     "levels": {
       "bronze": "Bronze",
       "silver": "Silver",
@@ -404,6 +467,18 @@
       "platinum": "Platinum",
       "diamond": "Diamond"
     }
+  },
+  "leaderboard": {
+    "subtitle": "Wager race — climb the table and take a share of the prize pool.",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "endsIn": "Ends in",
+    "rank": "#",
+    "player": "Player",
+    "wagered": "Wagered",
+    "prize": "Prize",
+    "you": "you",
+    "prizeNote": "Prizes shown in USDT. Demo table — opponents are simulated."
   },
   "legal": {
     "terms": "Terms of Service",
