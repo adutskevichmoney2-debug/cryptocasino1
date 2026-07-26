@@ -313,6 +313,98 @@
     "betWonToast": "Bet won! +{amount} {coin}",
     "selectionsCount": "{count, plural, one {# selection} other {# selections}}"
   },
+  "profile": {
+    "memberSince": "Member since {date}",
+    "kycNone": "Not verified",
+    "kycPending": "Verification pending",
+    "kycVerified": "Verified",
+    "levelLabel": "VIP {level}",
+    "stats": {
+      "totalBets": "Total bets",
+      "wagered": "Wagered (USD)",
+      "favorites": "Favorite games",
+      "bonuses": "Active bonuses"
+    },
+    "statsHidden": "Statistics are hidden in your privacy settings",
+    "quickDeposit": "Deposit",
+    "quickWithdraw": "Withdraw",
+    "quickBonuses": "Bonuses",
+    "settings": {
+      "profileSection": "Profile",
+      "nickname": "Nickname",
+      "avatar": "Avatar",
+      "preferences": "Preferences",
+      "language": "Interface language",
+      "displayCurrency": "Display currency",
+      "oddsFormat": "Odds format",
+      "decimal": "Decimal (1.85)",
+      "fractional": "Fractional (17/20)",
+      "american": "American (−118)",
+      "privacy": "Privacy & accessibility",
+      "hideStats": "Hide my statistics",
+      "hideStatsHint": "Your stats will not be shown on the profile overview.",
+      "reduceMotion": "Reduce animations",
+      "reduceMotionHint": "Disables decorative motion across the interface."
+    },
+    "security": {
+      "changePassword": "Change password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmNew": "Confirm new password",
+      "passwordChanged": "Password changed successfully",
+      "twoFactor": "Two-factor authentication",
+      "twoFactorHint": "An extra code at sign-in. Placeholder in this demo — no real TOTP secret is issued.",
+      "twoFactorEnabledToast": "Two-factor authentication enabled",
+      "twoFactorDisabledToast": "Two-factor authentication disabled",
+      "scanQr": "Scan the QR code in your authenticator app, then enter the 6-digit code.",
+      "enterCode": "6-digit code",
+      "activate": "Activate",
+      "sessions": "Active sessions",
+      "currentDevice": "This device",
+      "currentBrowser": "Current browser session",
+      "sessionsNote": "Demo: the session list is illustrative — only this browser session exists."
+    },
+    "kyc": {
+      "title": "Identity verification",
+      "intro": "Real platforms verify identity to comply with KYC/AML rules. This demo walks through the flow without collecting anything.",
+      "step1": "Personal details",
+      "step2": "Document",
+      "step3": "Review",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "dob": "Date of birth",
+      "country": "Country of residence",
+      "next": "Continue",
+      "docTitle": "Identity document",
+      "docHint": "Select a document photo. In this demo the file never leaves your device and is not read.",
+      "demoWarning": "Do not use real documents — this is a demonstration interface only.",
+      "chooseFile": "Choose file",
+      "noFile": "No file selected",
+      "submit": "Submit for review",
+      "pendingTitle": "Documents under review",
+      "pendingHint": "Demo: verification completes automatically in a few seconds.",
+      "verifiedTitle": "You are verified",
+      "verifiedHint": "Your account has full access to every platform feature."
+    },
+    "referrals": {
+      "title": "Invite friends — earn together",
+      "hint": "Share your link. Friends who sign up with it are tied to your account, and a real platform would share their activity revenue with you.",
+      "yourLink": "Your referral link",
+      "yourCode": "Your code",
+      "clicks": "Link clicks",
+      "signups": "Signups",
+      "earnings": "Earnings"
+    }
+  },
+  "vip": {
+    "levels": {
+      "bronze": "Bronze",
+      "silver": "Silver",
+      "gold": "Gold",
+      "platinum": "Platinum",
+      "diamond": "Diamond"
+    }
+  },
   "legal": {
     "terms": "Terms of Service",
     "privacy": "Privacy Policy",
