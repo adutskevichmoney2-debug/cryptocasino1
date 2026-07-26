@@ -37,6 +37,8 @@ export function AppInit() {
     void initNotifications();
     if (authStatus === "authed") {
       void useCasinoStore.getState().loadFavorites();
+      // Device and network details can only be captured server-side
+      void fetch("/api/session", { method: "POST" }).catch(() => {});
     } else {
       useCasinoStore.getState().resetFavorites();
     }
