@@ -8,6 +8,7 @@ import { MobileTabBar } from "./MobileTabBar";
 import { MobileMenuDrawer } from "./MobileMenuDrawer";
 import { ModalRoot } from "./ModalRoot";
 import { CookieConsent } from "@/components/shared/CookieConsent";
+import { ChatWidget } from "@/components/support/ChatWidget";
 import { AppInit } from "@/components/providers/AppInit";
 import { useUiStore } from "@/stores/uiStore";
 import { useMounted } from "@/hooks/useMounted";
@@ -36,6 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <MobileTabBar />
       <CookieConsent />
+      <ChatWidget />
       <AppInit />
       <Suspense fallback={null}>
         <ModalRoot />

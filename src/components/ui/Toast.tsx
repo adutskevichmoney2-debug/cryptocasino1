@@ -32,7 +32,7 @@ export function ToastHub() {
   return createPortal(
     <div
       aria-live="polite"
-      className="pointer-events-none fixed bottom-4 right-4 z-[110] flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2 max-lg:bottom-[calc(72px+env(safe-area-inset-bottom))]"
+      className="pointer-events-none fixed bottom-20 right-4 z-[110] flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2 max-lg:bottom-[calc(132px+env(safe-area-inset-bottom))]"
     >
       <AnimatePresence mode="popLayout">
         {toasts.map((t) => {
