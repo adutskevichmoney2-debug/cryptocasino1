@@ -354,6 +354,8 @@ export interface SupportService {
   searchArticles(locale: string, query: string): Promise<HelpArticle[]>;
   getChatHistory(): Promise<ChatMessage[]>;
   sendChatMessage(locale: string, text: string): Promise<ChatMessage>;
+  /** Live transcript updates — a staff reply arriving on the open ticket. */
+  onChatMessage(cb: (message: ChatMessage) => void): Unsubscribe;
   submitContactForm(input: { email: string; topic: string; message: string }): Promise<Result<void>>;
 }
 

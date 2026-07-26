@@ -11,6 +11,7 @@ import { CookieConsent } from "@/components/shared/CookieConsent";
 import { SplashScreen } from "@/components/shared/SplashScreen";
 import { ChatWidget } from "@/components/support/ChatWidget";
 import { AppInit } from "@/components/providers/AppInit";
+import { usePathname } from "@/i18n/navigation";
 import { useUiStore } from "@/stores/uiStore";
 import { useMounted } from "@/hooks/useMounted";
 import { cn } from "@/lib/cn";
@@ -18,6 +19,10 @@ import { cn } from "@/lib/cn";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const mounted = useMounted();
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
+  const pathname = usePathname();
+
+  // The operator panel ships its own shell — no player header, sidebar or chat.
+  if (pathname.startsWith("/admin")) return <>{children}</>;
 
   return (
     <div className="min-h-dvh">

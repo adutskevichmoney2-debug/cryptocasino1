@@ -26,27 +26,54 @@ folder** — no component, page or store changes.
 
 ```
 services/
-  index.ts        createServices() + the `services` singleton — the only public entry
+  index.ts        the `services` singleton — the only public entry
   types.ts        interfaces, Result<T>, domain models
   mock/
     *.mock.ts     implementations backed by localStorage
     db.ts         SSR-safe localStorage adapter, `cc:db:*` keys (≈ Supabase tables)
     latency.ts    delay() + Emitter
     fixtures/     static seed data (games, sports, coins, promos, help articles)
+  supabase/
+    *.supabase.ts implementations backed by Supabase (auth, tables, RPC, realtime)
+    errors.ts     Postgres/GoTrue errors → the stable `code` strings above
+    realtime.ts   per-user channel helpers that rebind across sign-in/sign-out
+  shared/
+    games.ts      the static casino catalogue, used by both backends
+    sports.ts     events, markets and the seeded odds drift, used by both
+    bonus.ts      VIP ladder maths and race periods
+    help.ts       help articles, search ranking and the canned chat answers
 ```
 
-## Swapping in Supabase
+## Picking a backend
 
-1. Add `services/supabase/*.supabase.ts` implementing the same interfaces from `types.ts`.
-2. In `index.ts`, pick the implementation:
-   ```ts
-   export const services: Services =
-     process.env.NEXT_PUBLIC_DATA_BACKEND === "supabase"
-       ? createSupabaseServices()
-       : createMockServices();
-   ```
-3. Map Postgres/PostgREST errors onto the same `code` strings the mocks emit, so the
-   existing translated error messages keep working.
+Both implementations exist and satisfy the same interfaces. `index.ts` chooses one
+at module load:
+
+```ts
+export const services: Services = isSupabaseConfigured
+  ? createSupabaseServices()
+  : createMockServices();
+```
+
+`isSupabaseConfigured` (from `@/lib/supabase/client`) is simply "are
+`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` both set". With no env
+vars the app runs entirely on the mock layer, so a fresh clone works with zero setup;
+add the two variables and the same UI talks to Postgres instead. Nothing else in the
+app reads those variables.
+
+## What Supabase actually stores
+
+Only user data. Games, providers, sport events, markets, odds, promotions, VIP levels,
+coin metadata, USD rates and help articles have no tables in `supabase/migrations` —
+they are catalogue content, and both backends read them from `shared/` (which in turn
+reads `mock/fixtures/`). The Supabase services hit the database for profiles, balances,
+transactions, bets, favourites, recent games, bonuses, tickets and notifications, and
+call the SECURITY DEFINER RPC in `0003_functions.sql` for anything that moves money.
+
+`errors.ts` maps the machine strings those functions raise (`insufficient_funds`,
+`invalid_code`, `already_claimed`, …) and GoTrue's prose ("Invalid login credentials")
+onto the same `code` values the mocks emit, so the translations under `errors` in
+`messages/*.json` keep working across both backends.
 
 ## Provider integration point
 

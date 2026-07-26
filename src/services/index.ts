@@ -1,4 +1,6 @@
 import type { Services } from "./types";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { createSupabaseServices } from "./supabase";
 import { createAuthService } from "./mock/auth.mock";
 import { createWalletService } from "./mock/wallet.mock";
 import { createGamesService } from "./mock/games.mock";
@@ -20,13 +22,13 @@ function createMockServices(): Services {
 }
 
 /**
- * The single entry point for all data access. Swapping the mock layer for a
- * real backend happens here and nowhere else:
- *
- *   process.env.NEXT_PUBLIC_DATA_BACKEND === "supabase"
- *     ? createSupabaseServices()
- *     : createMockServices()
+ * The single entry point for all data access. The backend is chosen once, at
+ * module load, from the environment: with Supabase credentials present the app
+ * talks to the real database, without them it runs entirely on the mock layer
+ * so the demo works with no setup at all.
  *
  * See ./README.md for the full contract.
  */
-export const services: Services = createMockServices();
+export const services: Services = isSupabaseConfigured
+  ? createSupabaseServices()
+  : createMockServices();

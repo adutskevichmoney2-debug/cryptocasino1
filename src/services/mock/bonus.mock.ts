@@ -8,6 +8,7 @@ import type {
 } from "../types";
 import { fail, ok } from "../types";
 import { LEADERBOARD_NAMES, PROMOTIONS, PROMO_CODES, VIP_LEVELS } from "./fixtures/promotions";
+import { RACE_PRIZE_POOL, RACE_SIZE, vipStatusFor } from "../shared/bonus";
 import { currentUserId } from "./auth.mock";
 import { dbKeys, dbRead, dbWrite, makeId } from "./db";
 import { delay } from "./latency";
@@ -21,13 +22,8 @@ function periodSeed(period: "daily" | "weekly"): string {
   return period === "daily" ? `d${day}` : `w${Math.floor(day / 7)}`;
 }
 
-const PRIZE_POOL = [500, 300, 200, 150, 100, 80, 60, 50, 40, 30, 25, 20, 15, 10, 10, 10, 5, 5, 5, 5];
-
 export function createBonusService(): BonusService {
   const readBonuses = (uid: string) => dbRead<UserBonus[]>(dbKeys.bonuses(uid), []);
-
-  const vipLevelFor = (xp: number) =>
-    [...VIP_LEVELS].reverse().find((l) => xp >= l.xpRequired) ?? VIP_LEVELS[0];
 
   return {
     async getPromotions() {
@@ -84,11 +80,7 @@ export function createBonusService(): BonusService {
       await delay(150, 350);
       const uid = currentUserId();
       const xp = uid ? dbRead<number>(`cc:db:xp:${uid}`, 0) : 0;
-      const level = vipLevelFor(xp);
-      const next = VIP_LEVELS.find((l) => l.level === level.level + 1) ?? null;
-      const span = next ? next.xpRequired - level.xpRequired : 1;
-      const progressPct = next ? Math.min(100, ((xp - level.xpRequired) / span) * 100) : 100;
-      return { level, next, xp, progressPct };
+      return vipStatusFor(xp);
     },
 
     async getLeaderboard(period): Promise<LeaderboardEntry[]> {
@@ -109,12 +101,12 @@ export function createBonusService(): BonusService {
 
       return rows
         .sort((a, b) => b.wagered - a.wagered)
-        .slice(0, 20)
+        .slice(0, RACE_SIZE)
         .map((row, i) => ({
           rank: i + 1,
           nickname: row.nickname,
           wagered: row.wagered,
-          prize: PRIZE_POOL[i] ?? 0,
+          prize: RACE_PRIZE_POOL[i] ?? 0,
           isCurrentUser: row.nickname === maskNickname("You"),
         }));
     },
