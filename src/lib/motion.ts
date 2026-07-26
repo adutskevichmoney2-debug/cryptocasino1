@@ -41,3 +41,9 @@ export const slideRight: Variants = {
   animate: { x: 0 },
   exit: { x: "100%" },
 };
+
+export const slideLeft: Variants = {
+  initial: { x: "-100%" },
+  animate: { x: 0 },
+  exit: { x: "-100%" },
+};

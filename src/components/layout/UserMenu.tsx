@@ -44,6 +44,9 @@ export function UserMenu() {
       <div className="px-2.5 py-2">
         <p className="truncate text-[13px] font-bold text-content">{user.nickname}</p>
         <p className="truncate text-xs text-content-tertiary">{user.email}</p>
+        <p className="mt-0.5 font-mono text-[11px] tabular-nums text-content-disabled">
+          ID {user.playerId}
+        </p>
       </div>
       <DropdownSeparator />
       <DropdownItem onSelect={() => router.push("/profile")}>

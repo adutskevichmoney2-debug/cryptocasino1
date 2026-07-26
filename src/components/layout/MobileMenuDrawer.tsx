@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { Drawer } from "@/components/ui/Drawer";
-import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
+import { LanguageInline } from "@/components/shared/LanguageSwitcher";
 import { useUiStore } from "@/stores/uiStore";
 import { SIDEBAR_SECTIONS } from "./navConfig";
 import { cn } from "@/lib/cn";
@@ -18,7 +18,7 @@ export function MobileMenuDrawer() {
     pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
 
   return (
-    <Drawer open={open} onClose={() => setOpen(false)} side="right" title={t("menu")}>
+    <Drawer open={open} onClose={() => setOpen(false)} side="left" title={t("menu")}>
       <div className="flex flex-col gap-5">
         {SIDEBAR_SECTIONS.map((section, i) => (
           <div key={i}>
@@ -49,8 +49,8 @@ export function MobileMenuDrawer() {
           </div>
         ))}
 
-        <div className="border-t border-line pt-3">
-          <LanguageSwitcher />
+        <div className="border-t border-line px-2.5 pt-4">
+          <LanguageInline />
         </div>
       </div>
     </Drawer>

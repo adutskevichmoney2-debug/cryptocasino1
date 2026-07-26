@@ -17,7 +17,6 @@ import { Select } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
 import { Avatar, AVATAR_GRADIENTS } from "@/components/ui/Avatar";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
-import { FIAT_CURRENCIES } from "@/services/mock/fixtures/coins";
 import { cn } from "@/lib/cn";
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -40,8 +39,6 @@ export function SettingsView() {
 
   const oddsFormat = useSettingsStore((s) => s.oddsFormat);
   const setOddsFormat = useSettingsStore((s) => s.setOddsFormat);
-  const fiatCurrency = useSettingsStore((s) => s.fiatCurrency);
-  const setFiatCurrency = useSettingsStore((s) => s.setFiatCurrency);
   const hideStats = useSettingsStore((s) => s.hideStats);
   const setHideStats = useSettingsStore((s) => s.setHideStats);
   const reduceMotion = useSettingsStore((s) => s.reduceMotion);
@@ -125,13 +122,6 @@ export function SettingsView() {
           <p className="text-sm font-medium text-content">{t("language")}</p>
           <LanguageSwitcher />
         </div>
-
-        <Select
-          label={t("displayCurrency")}
-          value={fiatCurrency}
-          onChange={(e) => setFiatCurrency(e.target.value as typeof fiatCurrency)}
-          options={FIAT_CURRENCIES.map((c) => ({ value: c, label: c }))}
-        />
 
         <Select
           label={t("oddsFormat")}

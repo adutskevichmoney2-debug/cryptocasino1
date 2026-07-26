@@ -9,6 +9,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { BalancePill } from "@/components/wallet/BalancePill";
 import { NotificationsDropdown } from "@/components/shared/NotificationsDropdown";
+import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 import { UserMenu } from "./UserMenu";
 import { useUiStore } from "@/stores/uiStore";
 import { useAuthStore } from "@/stores/authStore";
@@ -53,6 +54,7 @@ export function Header() {
       </nav>
 
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+        <LanguageSwitcher compact align="right" className="max-lg:hidden" />
         {!mounted || status === "loading" ? (
           <Skeleton className="h-9 w-44 max-sm:w-24" />
         ) : status === "authed" ? (

@@ -7,12 +7,10 @@ interface WalletState {
   balances: Balance[];
   rates: Record<Coin, number> | null;
   activeCoin: Coin;
-  showFiat: boolean;
   loading: boolean;
   init: () => Promise<void>;
   refresh: () => Promise<void>;
   setActiveCoin: (coin: Coin) => void;
-  toggleFiat: () => void;
   balanceOf: (coin: Coin) => number;
 }
 
@@ -24,7 +22,6 @@ export const useWalletStore = create<WalletState>()(
       balances: [],
       rates: null,
       activeCoin: "USDT",
-      showFiat: false,
       loading: true,
 
       async init() {
@@ -44,12 +41,11 @@ export const useWalletStore = create<WalletState>()(
       },
 
       setActiveCoin: (activeCoin) => set({ activeCoin }),
-      toggleFiat: () => set((s) => ({ showFiat: !s.showFiat })),
       balanceOf: (coin) => get().balances.find((b) => b.coin === coin)?.amount ?? 0,
     }),
     {
       name: "cc:ui:wallet",
-      partialize: (s) => ({ activeCoin: s.activeCoin, showFiat: s.showFiat }),
+      partialize: (s) => ({ activeCoin: s.activeCoin }),
       skipHydration: true,
     },
   ),

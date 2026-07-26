@@ -2,6 +2,7 @@ import type { AuthService, Result, Session, UserProfile } from "../types";
 import { fail, ok } from "../types";
 import { dbKeys, dbRead, dbRemove, dbWrite, makeId } from "./db";
 import { delay, Emitter } from "./latency";
+import { hashString } from "@/lib/rng";
 
 interface StoredUser extends UserProfile {
   /** Demo only. A real backend never stores or sees a raw password. */
@@ -22,13 +23,33 @@ function makeRefCode(): string {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
+/** Public 8-digit player id, unique across stored users. */
+function makePlayerId(taken: Set<string>): string {
+  for (;;) {
+    const candidate = String(Math.floor(10_000_000 + Math.random() * 90_000_000));
+    if (!taken.has(candidate)) return candidate;
+  }
+}
+
 function nicknameFromEmail(email: string): string {
   const base = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "");
   return base.slice(0, 16) || "player";
 }
 
-const readUsers = () => dbRead<StoredUser[]>(dbKeys.users, []);
 const writeUsers = (users: StoredUser[]) => dbWrite(dbKeys.users, users);
+
+/** Accounts created before the playerId field existed get one backfilled. */
+const readUsers = (): StoredUser[] => {
+  const users = dbRead<StoredUser[]>(dbKeys.users, []);
+  let migrated = false;
+  const result = users.map((u) => {
+    if (u.playerId) return u;
+    migrated = true;
+    return { ...u, playerId: String(10_000_000 + (hashString(u.id) % 90_000_000)) };
+  });
+  if (migrated) writeUsers(result);
+  return result;
+};
 
 function toProfile(user: StoredUser): UserProfile {
   const { passwordHash, ...profile } = user;
@@ -72,6 +93,7 @@ export function createAuthService(): AuthService {
 
       const user: StoredUser = {
         id: makeId("usr"),
+        playerId: makePlayerId(new Set(users.map((u) => u.playerId))),
         email: normalized,
         nickname: nickname?.trim() || nicknameFromEmail(normalized),
         avatarId: users.length % 12,

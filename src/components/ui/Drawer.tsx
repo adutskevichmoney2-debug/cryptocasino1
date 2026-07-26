@@ -6,14 +6,14 @@ import { AnimatePresence, m } from "framer-motion";
 import { X } from "lucide-react";
 import { useMounted } from "@/hooks/useMounted";
 import { useBodyLock } from "@/hooks/useBodyLock";
-import { fade, slideUp, slideRight, transitionStructural } from "@/lib/motion";
+import { fade, slideUp, slideRight, slideLeft, transitionStructural } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 import { IconButton } from "./IconButton";
 
 export interface DrawerProps {
   open: boolean;
   onClose: () => void;
-  side?: "bottom" | "right";
+  side?: "bottom" | "right" | "left";
   title?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
@@ -51,7 +51,7 @@ export function Drawer({ open, onClose, side = "bottom", title, children, classN
           <m.div
             role="dialog"
             aria-modal="true"
-            variants={side === "bottom" ? slideUp : slideRight}
+            variants={side === "bottom" ? slideUp : side === "left" ? slideLeft : slideRight}
             initial="initial"
             animate="animate"
             exit="exit"
@@ -60,7 +60,9 @@ export function Drawer({ open, onClose, side = "bottom", title, children, classN
               "absolute flex flex-col border-line bg-surface-1 shadow-modal",
               side === "bottom"
                 ? "inset-x-0 bottom-0 max-h-[88dvh] rounded-t-2xl border-t pb-[env(safe-area-inset-bottom)]"
-                : "bottom-0 right-0 top-0 w-[min(400px,92vw)] border-l",
+                : side === "left"
+                  ? "bottom-0 left-0 top-0 w-[min(340px,88vw)] border-r"
+                  : "bottom-0 right-0 top-0 w-[min(400px,92vw)] border-l",
               className,
             )}
           >

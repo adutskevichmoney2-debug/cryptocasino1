@@ -315,6 +315,7 @@
   },
   "profile": {
     "memberSince": "С нами с {date}",
+    "playerId": "ID игрока",
     "kycNone": "Не верифицирован",
     "kycPending": "Верификация на проверке",
     "kycVerified": "Верифицирован",

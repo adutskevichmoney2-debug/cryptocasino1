@@ -34,6 +34,8 @@ export interface Paginated<T> {
 
 export interface UserProfile {
   id: string;
+  /** Public numeric player id, e.g. "48291736". */
+  playerId: string;
   email: string;
   nickname: string;
   avatarId: number;

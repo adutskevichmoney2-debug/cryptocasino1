@@ -1,7 +1,8 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { ArrowDownToLine, ArrowUpFromLine, Gift } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, Check, Copy, Gift } from "lucide-react";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { Link } from "@/i18n/navigation";
 import { services } from "@/services";
 import { useAsync } from "@/hooks/useAsync";
@@ -16,6 +17,21 @@ import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatCompact } from "@/lib/format";
+
+function PlayerIdChip({ id, label }: { id: string; label: string }) {
+  const { copied, copy } = useCopyToClipboard();
+  return (
+    <button
+      type="button"
+      title={label}
+      onClick={() => void copy(id)}
+      className="inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-surface-2 px-2 py-0.5 font-mono text-xs font-semibold tabular-nums text-content-secondary transition-colors duration-120 hover:bg-surface-3 hover:text-content"
+    >
+      ID {id}
+      {copied ? <Check className="size-3 text-success" /> : <Copy className="size-3" />}
+    </button>
+  );
+}
 
 export function ProfileOverview() {
   const t = useTranslations("profile");
@@ -55,11 +71,14 @@ export function ProfileOverview() {
             {kycBadge}
             {vip && <Badge variant="accent">{t("levelLabel", { level: vip.level.level })}</Badge>}
           </div>
-          <p className="mt-1 text-[13px] text-content-tertiary">
-            {t("memberSince", {
-              date: format.dateTime(new Date(user.createdAt), { dateStyle: "long" }),
-            })}
-          </p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[13px] text-content-tertiary">
+            <PlayerIdChip id={user.playerId} label={t("playerId")} />
+            <span>
+              {t("memberSince", {
+                date: format.dateTime(new Date(user.createdAt), { dateStyle: "long" }),
+              })}
+            </span>
+          </div>
           {vip && (
             <div className="mt-3 max-w-sm">
               <div className="mb-1 flex justify-between text-[11px] font-semibold text-content-tertiary">

@@ -7,7 +7,6 @@ import { useAsync } from "@/hooks/useAsync";
 import { useWalletStore } from "@/stores/walletStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useServiceError } from "@/hooks/useServiceError";
-import { useFiat } from "@/hooks/useFiat";
 import { CoinSelect } from "./CoinSelect";
 import { NetworkSelect } from "./NetworkSelect";
 import { Input } from "@/components/ui/Input";
@@ -22,7 +21,6 @@ export function WithdrawPanel({ coins }: { coins: CoinMeta[] }) {
   const pushToast = useUiStore((s) => s.pushToast);
   const balanceOf = useWalletStore((s) => s.balanceOf);
   const activeCoin = useWalletStore((s) => s.activeCoin);
-  const { toFiat } = useFiat();
 
   const [coin, setCoin] = useState<Coin>(activeCoin);
   const meta = useMemo(() => coins.find((c) => c.coin === coin) ?? coins[0], [coins, coin]);
@@ -128,9 +126,6 @@ export function WithdrawPanel({ coins }: { coins: CoinMeta[] }) {
           <span className="font-semibold text-content">{t("youReceive")}</span>
           <span className="font-semibold tabular-nums text-content">
             {formatCrypto(receive, 6)} {coin}
-            <span className="ml-1.5 text-xs font-normal text-content-tertiary">
-              ≈ {toFiat(coin, receive)}
-            </span>
           </span>
         </div>
       </div>

@@ -8,6 +8,7 @@ import { MobileTabBar } from "./MobileTabBar";
 import { MobileMenuDrawer } from "./MobileMenuDrawer";
 import { ModalRoot } from "./ModalRoot";
 import { CookieConsent } from "@/components/shared/CookieConsent";
+import { SplashScreen } from "@/components/shared/SplashScreen";
 import { ChatWidget } from "@/components/support/ChatWidget";
 import { AppInit } from "@/components/providers/AppInit";
 import { useUiStore } from "@/stores/uiStore";
@@ -20,6 +21,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-dvh">
+      <SplashScreen />
       <Header />
       <Sidebar />
       <MobileMenuDrawer />

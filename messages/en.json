@@ -315,6 +315,7 @@
   },
   "profile": {
     "memberSince": "Member since {date}",
+    "playerId": "Player ID",
     "kycNone": "Not verified",
     "kycPending": "Verification pending",
     "kycVerified": "Verified",

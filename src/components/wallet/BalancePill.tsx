@@ -2,25 +2,20 @@
 
 import { ChevronDown, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Dropdown, DropdownItem, DropdownSeparator } from "@/components/ui/Dropdown";
+import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
-import { Switch } from "@/components/ui/Switch";
 import { Button } from "@/components/ui/Button";
 import { CoinIcon } from "./CoinIcon";
 import { useWalletStore } from "@/stores/walletStore";
 import { useUiStore } from "@/stores/uiStore";
-import { useFiat } from "@/hooks/useFiat";
-import { formatCrypto, formatFiat } from "@/lib/format";
+import { formatCrypto } from "@/lib/format";
 
 export function BalancePill() {
   const t = useTranslations("wallet");
   const balances = useWalletStore((s) => s.balances);
   const activeCoin = useWalletStore((s) => s.activeCoin);
   const setActiveCoin = useWalletStore((s) => s.setActiveCoin);
-  const showFiat = useWalletStore((s) => s.showFiat);
-  const toggleFiat = useWalletStore((s) => s.toggleFiat);
   const openModal = useUiStore((s) => s.openModal);
-  const { toFiat, toFiatValue, fiatCurrency } = useFiat();
 
   const active = balances.find((b) => b.coin === activeCoin);
   const amount = active?.amount ?? 0;
@@ -29,7 +24,7 @@ export function BalancePill() {
     <div className="flex items-stretch">
       <Dropdown
         align="right"
-        width="w-72"
+        width="w-[min(13.5rem,calc(100vw-1.5rem))] max-h-[min(400px,65dvh)] overflow-y-auto"
         trigger={(open) => (
           <button
             type="button"
@@ -38,10 +33,8 @@ export function BalancePill() {
           >
             <CoinIcon coin={activeCoin} size="sm" />
             <AnimatedNumber
-              value={showFiat ? toFiatValue(activeCoin, amount) : amount}
-              format={(v) =>
-                showFiat ? formatFiat(v, fiatCurrency) : formatCrypto(v, 6)
-              }
+              value={amount}
+              format={(v) => formatCrypto(v, 6)}
               className="text-[13px] font-bold text-content"
             />
             <ChevronDown className="size-3.5 text-content-tertiary" />
@@ -53,21 +46,13 @@ export function BalancePill() {
             key={b.coin}
             active={b.coin === activeCoin}
             onSelect={() => setActiveCoin(b.coin)}
+            className="py-1.5"
           >
             <CoinIcon coin={b.coin} size="sm" />
             <span className="font-semibold">{b.coin}</span>
-            <span className="ml-auto flex flex-col items-end">
-              <span className="tabular-nums text-content">{formatCrypto(b.amount, 6)}</span>
-              <span className="text-[11px] tabular-nums text-content-tertiary">
-                {toFiat(b.coin, b.amount)}
-              </span>
-            </span>
+            <span className="ml-auto tabular-nums text-content">{formatCrypto(b.amount, 6)}</span>
           </DropdownItem>
         ))}
-        <DropdownSeparator />
-        <div className="px-2.5 py-1.5">
-          <Switch checked={showFiat} onCheckedChange={toggleFiat} label={t("showFiat")} />
-        </div>
       </Dropdown>
 
       <Button
