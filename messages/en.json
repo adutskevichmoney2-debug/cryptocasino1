@@ -3,10 +3,12 @@
     "appName": "CryptoCasino",
     "loading": "Loading…",
     "error": "Something went wrong",
+    "errorDescription": "An unexpected error occurred. Please try again.",
     "retry": "Retry",
     "cancel": "Cancel",
     "confirm": "Confirm",
     "save": "Save",
+    "saved": "Changes saved",
     "close": "Close",
     "copy": "Copy",
     "copied": "Copied!",
@@ -14,12 +16,98 @@
     "viewAll": "View all",
     "showMore": "Show more",
     "comingSoon": "Coming soon",
-    "demo": "Demo"
+    "demo": "Demo",
+    "back": "Back",
+    "goHome": "Go to home",
+    "language": "Language",
+    "all": "All"
+  },
+  "nav": {
+    "casino": "Casino",
+    "sports": "Sports",
+    "promotions": "Promotions",
+    "vip": "VIP Club",
+    "leaderboard": "Leaderboard",
+    "provablyFair": "Provably Fair",
+    "help": "Help Center",
+    "support": "Support",
+    "menu": "Menu",
+    "wallet": "Wallet",
+    "profile": "Profile",
+    "games": "Games",
+    "slots": "Slots",
+    "live": "Live Casino",
+    "gameShows": "Game Shows",
+    "originals": "Originals",
+    "table": "Table Games",
+    "new": "New Releases",
+    "popular": "Popular",
+    "favorites": "Favorites",
+    "recent": "Recently Played",
+    "liveNow": "Live Now",
+    "sportsbook": "Sportsbook"
+  },
+  "header": {
+    "deposit": "Deposit",
+    "notifications": "Notifications",
+    "noNotifications": "No notifications yet",
+    "markAllRead": "Mark all as read",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "openMenu": "Open menu"
+  },
+  "footer": {
+    "tagline": "A demo crypto casino and sportsbook interface. Built as a portfolio project — no real money is involved.",
+    "casino": "Casino",
+    "sports": "Sports",
+    "about": "About",
+    "legal": "Legal",
+    "aboutUs": "About us",
+    "affiliate": "Affiliate program",
+    "disclaimerTitle": "Demo project",
+    "disclaimer": "This site is a non-commercial demonstration of a front-end interface. It does not accept deposits, does not process payments and does not offer real gambling.",
+    "ageWarning": "18+",
+    "responsibleGaming": "Play responsibly",
+    "rights": "All rights reserved."
   },
   "auth": {
     "login": "Sign in",
     "register": "Sign up",
+    "logout": "Log out",
     "showPassword": "Show password",
     "hidePassword": "Hide password"
+  },
+  "legal": {
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "responsible-gambling": "Responsible Gambling",
+    "aml": "AML Policy"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for doesn't exist or has been moved.",
+    "backToCasino": "Back to casino"
+  },
+  "cookies": {
+    "message": "We use cookies to keep your session and preferences. This demo stores everything locally in your browser.",
+    "accept": "Got it",
+    "learnMore": "Learn more"
+  },
+  "pages": {
+    "casinoTitle": "Casino",
+    "sportsTitle": "Sports",
+    "promotionsTitle": "Promotions",
+    "vipTitle": "VIP Club",
+    "leaderboardTitle": "Leaderboard",
+    "provablyFairTitle": "Provably Fair",
+    "helpTitle": "Help Center",
+    "contactTitle": "Contact us",
+    "profileTitle": "Profile",
+    "settingsTitle": "Settings",
+    "securityTitle": "Security",
+    "verificationTitle": "Verification",
+    "transactionsTitle": "Transactions",
+    "betsTitle": "My Bets",
+    "referralsTitle": "Referrals"
   }
 }

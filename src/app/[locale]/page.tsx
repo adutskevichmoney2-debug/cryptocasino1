@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 export default async function HomePage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
@@ -7,8 +8,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: L
   const t = await getTranslations("common");
 
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="font-display text-2xl font-bold">{t("appName")}</h1>
-    </main>
+    <PageContainer>
+      <h1 className="font-display text-3xl font-extrabold">{t("appName")}</h1>
+    </PageContainer>
   );
 }

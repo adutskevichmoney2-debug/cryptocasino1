@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing";
 import { MotionProvider } from "@/components/providers/MotionProvider";
 import { StoreHydration } from "@/components/providers/StoreHydration";
 import { ToastHub } from "@/components/ui/Toast";
+import { AppShell } from "@/components/layout/AppShell";
 import "@/styles/globals.css";
 
 const inter = Inter({
@@ -57,7 +58,7 @@ export default async function LocaleLayout({
       <body>
         <NextIntlClientProvider>
           <MotionProvider>
-            {children}
+            <AppShell>{children}</AppShell>
             <ToastHub />
           </MotionProvider>
           <StoreHydration />

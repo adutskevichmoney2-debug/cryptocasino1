@@ -3,10 +3,12 @@
     "appName": "CryptoCasino",
     "loading": "Загрузка…",
     "error": "Что-то пошло не так",
+    "errorDescription": "Произошла непредвиденная ошибка. Попробуйте ещё раз.",
     "retry": "Повторить",
     "cancel": "Отмена",
     "confirm": "Подтвердить",
     "save": "Сохранить",
+    "saved": "Изменения сохранены",
     "close": "Закрыть",
     "copy": "Копировать",
     "copied": "Скопировано!",
@@ -14,12 +16,98 @@
     "viewAll": "Все",
     "showMore": "Показать ещё",
     "comingSoon": "Скоро",
-    "demo": "Демо"
+    "demo": "Демо",
+    "back": "Назад",
+    "goHome": "На главную",
+    "language": "Язык",
+    "all": "Все"
+  },
+  "nav": {
+    "casino": "Казино",
+    "sports": "Спорт",
+    "promotions": "Бонусы",
+    "vip": "VIP-клуб",
+    "leaderboard": "Лидерборд",
+    "provablyFair": "Честная игра",
+    "help": "Помощь",
+    "support": "Поддержка",
+    "menu": "Меню",
+    "wallet": "Кошелёк",
+    "profile": "Профиль",
+    "games": "Игры",
+    "slots": "Слоты",
+    "live": "Живое казино",
+    "gameShows": "Шоу-игры",
+    "originals": "Оригиналы",
+    "table": "Настольные игры",
+    "new": "Новинки",
+    "popular": "Популярное",
+    "favorites": "Избранное",
+    "recent": "Недавние",
+    "liveNow": "Сейчас в лайве",
+    "sportsbook": "Ставки на спорт"
+  },
+  "header": {
+    "deposit": "Пополнить",
+    "notifications": "Уведомления",
+    "noNotifications": "Уведомлений пока нет",
+    "markAllRead": "Прочитать все",
+    "collapseSidebar": "Свернуть меню",
+    "expandSidebar": "Развернуть меню",
+    "openMenu": "Открыть меню"
+  },
+  "footer": {
+    "tagline": "Демонстрационный интерфейс крипто-казино и букмекера. Создан как портфолио-проект — реальные деньги не используются.",
+    "casino": "Казино",
+    "sports": "Спорт",
+    "about": "О проекте",
+    "legal": "Документы",
+    "aboutUs": "О нас",
+    "affiliate": "Партнёрская программа",
+    "disclaimerTitle": "Демо-проект",
+    "disclaimer": "Этот сайт — некоммерческая демонстрация фронтенд-интерфейса. Он не принимает депозиты, не проводит платежи и не предлагает реальные азартные игры.",
+    "ageWarning": "18+",
+    "responsibleGaming": "Играйте ответственно",
+    "rights": "Все права защищены."
   },
   "auth": {
     "login": "Вход",
     "register": "Регистрация",
+    "logout": "Выйти",
     "showPassword": "Показать пароль",
     "hidePassword": "Скрыть пароль"
+  },
+  "legal": {
+    "terms": "Пользовательское соглашение",
+    "privacy": "Политика конфиденциальности",
+    "responsible-gambling": "Ответственная игра",
+    "aml": "AML-политика"
+  },
+  "notFound": {
+    "title": "Страница не найдена",
+    "description": "Страница, которую вы ищете, не существует или была перемещена.",
+    "backToCasino": "Вернуться в казино"
+  },
+  "cookies": {
+    "message": "Мы используем cookie, чтобы сохранять вашу сессию и настройки. В этом демо все данные хранятся локально в браузере.",
+    "accept": "Понятно",
+    "learnMore": "Подробнее"
+  },
+  "pages": {
+    "casinoTitle": "Казино",
+    "sportsTitle": "Спорт",
+    "promotionsTitle": "Бонусы",
+    "vipTitle": "VIP-клуб",
+    "leaderboardTitle": "Лидерборд",
+    "provablyFairTitle": "Честная игра",
+    "helpTitle": "Центр помощи",
+    "contactTitle": "Связаться с нами",
+    "profileTitle": "Профиль",
+    "settingsTitle": "Настройки",
+    "securityTitle": "Безопасность",
+    "verificationTitle": "Верификация",
+    "transactionsTitle": "Транзакции",
+    "betsTitle": "Мои ставки",
+    "referralsTitle": "Рефералы"
   }
 }
