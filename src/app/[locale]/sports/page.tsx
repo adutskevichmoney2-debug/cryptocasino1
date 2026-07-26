@@ -1,14 +1,9 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
-import { PageContainer, PageHeader } from "@/components/layout/PageContainer";
+import { SportsHomeView } from "@/components/sports/SportsViews";
 
-export default async function Page({ params }: { params: Promise<{ locale: Locale }> }) {
+export default async function SportsPage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("pages");
-  return (
-    <PageContainer>
-      <PageHeader title={t("sportsTitle")} />
-    </PageContainer>
-  );
+  return <SportsHomeView />;
 }

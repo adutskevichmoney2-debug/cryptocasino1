@@ -1,36 +1,43 @@
 import type { AppNotification, NotificationsService } from "../types";
 import { currentUserId } from "./auth.mock";
 import { dbKeys, dbRead, dbWrite, makeId } from "./db";
-import { Emitter } from "./latency";
+import { notificationBus } from "./bus";
 
 const MAX_STORED = 30;
 
+const read = (uid: string) => dbRead<AppNotification[]>(dbKeys.notifications(uid), []);
+const write = (uid: string, items: AppNotification[]) =>
+  dbWrite(dbKeys.notifications(uid), items.slice(0, MAX_STORED));
+
+/** Creates + persists + broadcasts a notification. Usable by any mock service. */
+export function pushSystemNotification(input: {
+  key: string;
+  values?: Record<string, string | number>;
+  href?: string;
+}): AppNotification {
+  const notification: AppNotification = {
+    id: makeId("ntf"),
+    key: input.key,
+    values: input.values,
+    href: input.href,
+    createdAt: new Date().toISOString(),
+    read: false,
+  };
+  const uid = currentUserId();
+  if (uid) write(uid, [notification, ...read(uid)]);
+  notificationBus.emit(notification);
+  return notification;
+}
+
 export function createNotificationsService(): NotificationsService {
-  const emitter = new Emitter<AppNotification>();
-
-  const read = (uid: string) => dbRead<AppNotification[]>(dbKeys.notifications(uid), []);
-  const write = (uid: string, items: AppNotification[]) =>
-    dbWrite(dbKeys.notifications(uid), items.slice(0, MAX_STORED));
-
   return {
     async getAll() {
       const uid = currentUserId();
       return uid ? read(uid) : [];
     },
 
-    async push({ key, values, href }) {
-      const notification: AppNotification = {
-        id: makeId("ntf"),
-        key,
-        values,
-        href,
-        createdAt: new Date().toISOString(),
-        read: false,
-      };
-      const uid = currentUserId();
-      if (uid) write(uid, [notification, ...read(uid)]);
-      emitter.emit(notification);
-      return notification;
+    async push(input) {
+      return pushSystemNotification(input);
     },
 
     async markRead(ids) {
@@ -53,7 +60,7 @@ export function createNotificationsService(): NotificationsService {
     },
 
     onNotification(cb) {
-      return emitter.subscribe(cb);
+      return notificationBus.subscribe(cb);
     },
   };
 }

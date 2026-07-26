@@ -1,71 +1,42 @@
 import type {
-  Balance,
-  Coin,
   CoinMeta,
-  Network,
   Paginated,
   Result,
   Transaction,
-  TxType,
   WalletService,
 } from "../types";
 import { fail, ok } from "../types";
-import { COINS, NETWORK_CONFIRM_MIN, RATES, WITHDRAW_FEES } from "./fixtures/coins";
+import { COINS, RATES, WITHDRAW_FEES } from "./fixtures/coins";
 import { currentUserId } from "./auth.mock";
-import { dbKeys, dbRead, dbWrite, makeId } from "./db";
-import { delay, Emitter } from "./latency";
+import { makeId } from "./db";
+import { delay } from "./latency";
+import { balanceBus, txBus } from "./bus";
+import {
+  addTransaction,
+  credit,
+  EMPTY_BALANCES,
+  readBalances,
+  readTransactions,
+  writeTransactions,
+} from "./walletCore";
 import { generateAddress, isValidAddress } from "@/lib/address";
 
-const EMPTY_BALANCES: Balance[] = COINS.map((c) => ({ coin: c.coin, amount: 0 }));
-
-/** Pending deposits/withdrawals settle after this long, mimicking confirmations. */
+/** Pending withdrawals settle after this long, mimicking chain confirmations. */
 const CONFIRM_DELAY_MS = 35_000;
 
 export function createWalletService(): WalletService {
-  const balanceEmitter = new Emitter<Balance[]>();
-  const txEmitter = new Emitter<Transaction>();
   const pendingTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
-  const readBalances = (uid: string): Balance[] => {
-    const stored = dbRead<Balance[]>(dbKeys.wallet(uid), EMPTY_BALANCES);
-    // Keep the shape in sync if the coin list grows between sessions
-    return COINS.map((c) => stored.find((b) => b.coin === c.coin) ?? { coin: c.coin, amount: 0 });
-  };
-
-  const writeBalances = (uid: string, balances: Balance[]) => {
-    dbWrite(dbKeys.wallet(uid), balances);
-    balanceEmitter.emit(balances);
-  };
-
-  const readTx = (uid: string): Transaction[] => dbRead<Transaction[]>(dbKeys.transactions(uid), []);
-
-  const writeTx = (uid: string, txs: Transaction[]) => dbWrite(dbKeys.transactions(uid), txs);
-
-  const addTx = (uid: string, tx: Transaction) => {
-    writeTx(uid, [tx, ...readTx(uid)]);
-    txEmitter.emit(tx);
-  };
-
-  const credit = (uid: string, coin: Coin, delta: number): Balance[] => {
-    const balances = readBalances(uid).map((b) =>
-      b.coin === coin ? { ...b, amount: Math.max(0, b.amount + delta) } : b,
-    );
-    writeBalances(uid, balances);
-    return balances;
-  };
-
-  /** Moves a pending transaction to confirmed and settles its balance effect. */
-  const scheduleConfirmation = (uid: string, txId: string, onConfirm: () => void) => {
+  const scheduleConfirmation = (uid: string, txId: string) => {
     const timer = setTimeout(() => {
       pendingTimers.delete(txId);
-      const txs = readTx(uid);
+      const txs = readTransactions(uid);
       const index = txs.findIndex((t) => t.id === txId);
       if (index === -1 || txs[index].status !== "pending") return;
       const confirmed: Transaction = { ...txs[index], status: "confirmed" };
       txs[index] = confirmed;
-      writeTx(uid, txs);
-      onConfirm();
-      txEmitter.emit(confirmed);
+      writeTransactions(uid, txs);
+      txBus.emit(confirmed);
     }, CONFIRM_DELAY_MS);
     pendingTimers.set(txId, timer);
   };
@@ -112,7 +83,7 @@ export function createWalletService(): WalletService {
         demo: true,
       };
       credit(uid, coin, amount);
-      addTx(uid, tx);
+      addTransaction(uid, tx);
       return ok(tx);
     },
 
@@ -151,15 +122,15 @@ export function createWalletService(): WalletService {
 
       // Funds leave the balance immediately; the transaction confirms later
       credit(uid, coin, -(amount + fee));
-      addTx(uid, tx);
-      scheduleConfirmation(uid, tx.id, () => {});
+      addTransaction(uid, tx);
+      scheduleConfirmation(uid, tx.id);
       return ok(tx);
     },
 
     async getTransactions(filter): Promise<Paginated<Transaction>> {
       await delay(200, 450);
       const uid = currentUserId();
-      const all = uid ? readTx(uid) : [];
+      const all = uid ? readTransactions(uid) : [];
       const filtered = filter?.type ? all.filter((t) => t.type === filter.type) : all;
       const page = filter?.page ?? 1;
       const pageSize = filter?.pageSize ?? 20;
@@ -171,7 +142,7 @@ export function createWalletService(): WalletService {
       };
     },
 
-    async applyDelta({ coin, amount, type, note }): Promise<Result<Balance>> {
+    async applyDelta({ coin, amount, type, note }): Promise<Result<import("../types").Balance>> {
       const uid = currentUserId();
       if (!uid) return fail("auth/not-authenticated");
 
@@ -179,7 +150,7 @@ export function createWalletService(): WalletService {
       if (amount < 0 && balance + amount < 0) return fail("wallet/insufficient-funds");
 
       const balances = credit(uid, coin, amount);
-      addTx(uid, {
+      addTransaction(uid, {
         id: makeId("tx"),
         type,
         coin,
@@ -192,14 +163,11 @@ export function createWalletService(): WalletService {
     },
 
     onBalanceChange(cb) {
-      return balanceEmitter.subscribe(cb);
+      return balanceBus.subscribe(cb);
     },
 
     onTransactionUpdate(cb) {
-      return txEmitter.subscribe(cb);
+      return txBus.subscribe(cb);
     },
   };
 }
-
-export { NETWORK_CONFIRM_MIN };
-export type { Network };

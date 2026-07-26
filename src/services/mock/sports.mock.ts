@@ -12,11 +12,18 @@ import type {
 } from "../types";
 import { fail, ok } from "../types";
 import { EVENTS, type EventFixture } from "./fixtures/events";
+import { RATES } from "./fixtures/coins";
 import { currentUserId } from "./auth.mock";
 import { dbKeys, dbRead, dbWrite, makeId } from "./db";
 import { delay, Emitter } from "./latency";
-import { rngFloat, seededRng } from "@/lib/rng";
+import { addTransaction, credit } from "./walletCore";
+import { pushSystemNotification } from "./notifications.mock";
+import { addWagerProgress } from "./bonus.mock";
+import { hashString, rngFloat, seededRng } from "@/lib/rng";
 import { SPORT_SLUGS } from "@/lib/constants";
+
+/** Demo time is accelerated: open bets settle this long after placement. */
+const SETTLE_AFTER_MS = 120_000;
 
 /** Extra market templates layered on top of the main 1X2/moneyline market. */
 const MARKET_TEMPLATES: { key: string; outcomes: string[] }[] = [
@@ -98,6 +105,54 @@ export function createSportsService(): SportsService {
 
   const readBets = (uid: string) => dbRead<Bet[]>(dbKeys.bets(uid), []);
   const writeBets = (uid: string, bets: Bet[]) => dbWrite(dbKeys.bets(uid), bets);
+
+  /** Settles due open bets: credits wins, records the transaction, notifies. */
+  const settleDueBets = (uid: string) => {
+    const bets = readBets(uid);
+    const now = Date.now();
+    let changed = false;
+
+    const updated = bets.map((bet) => {
+      if (bet.status !== "open") return bet;
+      if (now - new Date(bet.createdAt).getTime() < SETTLE_AFTER_MS) return bet;
+
+      // Deterministic outcome, slightly player-favoured for a lively demo
+      const won = hashString(bet.id) % 100 < 48;
+      changed = true;
+      const settled: Bet = {
+        ...bet,
+        status: won ? "won" : "lost",
+        settledAt: new Date().toISOString(),
+      };
+
+      if (won) {
+        credit(uid, bet.coin, bet.potentialWin);
+        addTransaction(uid, {
+          id: makeId("tx"),
+          type: "win",
+          coin: bet.coin,
+          amount: bet.potentialWin,
+          status: "confirmed",
+          createdAt: new Date().toISOString(),
+          note: bet.selections[0]?.eventLabel,
+        });
+        pushSystemNotification({
+          key: "betWon",
+          values: { amount: Math.round(bet.potentialWin * 1e6) / 1e6, coin: bet.coin },
+          href: "/profile/bets",
+        });
+      } else {
+        pushSystemNotification({
+          key: "betLost",
+          values: { event: bet.selections[0]?.eventLabel ?? "" },
+          href: "/profile/bets",
+        });
+      }
+      return settled;
+    });
+
+    if (changed) writeBets(uid, updated);
+  };
 
   const startDrift = () => {
     if (driftTimer) return;
@@ -187,12 +242,15 @@ export function createSportsService(): SportsService {
       };
 
       writeBets(uid, [bet, ...readBets(uid)]);
+      // VIP XP and race volume accrue from wager size in USD terms
+      addWagerProgress(stake * (RATES[coin] ?? 1));
       return ok(bet);
     },
 
     async getMyBets(filter = {}): Promise<Paginated<Bet>> {
       await delay(180, 400);
       const uid = currentUserId();
+      if (uid) settleDueBets(uid);
       const all = uid ? readBets(uid) : [];
       const filtered =
         filter.status === "open"
@@ -223,15 +281,6 @@ export function createSportsService(): SportsService {
         if (watchedIds.length === 0) stopDrift();
       };
     },
-  };
-}
-
-/** Settles an open bet — called when the user's bets are reviewed. */
-export function settleBet(bet: Bet, won: boolean): Bet {
-  return {
-    ...bet,
-    status: won ? "won" : "lost",
-    settledAt: new Date().toISOString(),
   };
 }
 
