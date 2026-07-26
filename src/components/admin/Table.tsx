@@ -116,8 +116,11 @@ export function RowLink({
   );
 }
 
-/** Full-width row used for the "no results" case inside a table body. */
-export function EmptyRow({ colSpan, label = "No records" }: { colSpan: number; label?: string }) {
+/**
+ * Full-width row used for the "no results" case inside a table body. The label
+ * is always supplied by the caller so it is translated in the caller's context.
+ */
+export function EmptyRow({ colSpan, label }: { colSpan: number; label: string }) {
   return (
     <tr>
       <td colSpan={colSpan} className="px-3 py-10 text-center text-content-tertiary">

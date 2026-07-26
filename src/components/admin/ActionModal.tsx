@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -19,6 +20,7 @@ export function ActionModal({
   summary,
   danger,
   disabled,
+  error,
   onSubmit,
   children,
 }: {
@@ -30,9 +32,12 @@ export function ActionModal({
   summary: React.ReactNode;
   danger?: boolean;
   disabled?: boolean;
+  /** Inline failure text, shown on both stages so it survives the confirm step. */
+  error?: string | null;
   onSubmit: () => Promise<void>;
   children: React.ReactNode;
 }) {
+  const t = useTranslations("admin.common");
   const [stage, setStage] = useState<"form" | "confirm">("form");
   const [pending, setPending] = useState(false);
 
@@ -52,12 +57,17 @@ export function ActionModal({
       {stage === "form" ? (
         <div className="flex flex-col gap-4">
           {children}
+          {error && (
+            <p role="alert" className="text-xs text-danger">
+              {error}
+            </p>
+          )}
           <div className="flex justify-end gap-2">
             <Button variant="ghost" size="sm" onClick={close}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button size="sm" disabled={disabled} onClick={() => setStage("confirm")}>
-              Continue
+              {t("continue")}
             </Button>
           </div>
         </div>
@@ -74,9 +84,14 @@ export function ActionModal({
             />
             <div className="min-w-0 text-[13px] leading-relaxed text-content">{summary}</div>
           </div>
+          {error && (
+            <p role="alert" className="text-xs text-danger">
+              {error}
+            </p>
+          )}
           <div className="flex justify-end gap-2">
             <Button variant="ghost" size="sm" disabled={pending} onClick={() => setStage("form")}>
-              Back
+              {t("back")}
             </Button>
             <Button
               size="sm"

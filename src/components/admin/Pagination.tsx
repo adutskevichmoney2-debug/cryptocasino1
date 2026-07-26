@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
@@ -23,6 +24,7 @@ export function Pagination({
   /** Rows on the current page — used when an exact count is unavailable. */
   shown: number;
 }) {
+  const t = useTranslations("admin.common");
   const count = total ?? 0;
   const lastPage = total === null ? page + (shown === pageSize ? 1 : 0) : Math.max(1, Math.ceil(count / pageSize));
   const first = shown === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -36,8 +38,8 @@ export function Pagination({
     <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
       <p className="text-xs text-content-tertiary">
         {total === null
-          ? `Showing ${first}–${last}`
-          : `Showing ${first}–${last} of ${count.toLocaleString("en-US")}`}
+          ? t("showing", { from: first, to: last })
+          : t("showingOf", { from: first, to: last, total: count.toLocaleString("en-US") })}
       </p>
       <div className="flex items-center gap-2">
         <Link
@@ -47,11 +49,10 @@ export function Pagination({
           className={cn(linkClass, page <= 1 && disabledClass)}
         >
           <ChevronLeft className="size-4" />
-          Prev
+          {t("prev")}
         </Link>
         <span className="text-xs tabular-nums text-content-tertiary">
-          Page {page}
-          {total !== null && ` / ${lastPage}`}
+          {total === null ? t("page", { page }) : t("pageOf", { page, total: lastPage })}
         </span>
         <Link
           href={hrefWith(basePath, { ...params, page: page + 1 })}
@@ -59,7 +60,7 @@ export function Pagination({
           tabIndex={page >= lastPage ? -1 : undefined}
           className={cn(linkClass, page >= lastPage && disabledClass)}
         >
-          Next
+          {t("next")}
           <ChevronRight className="size-4" />
         </Link>
       </div>

@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Users } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
@@ -27,6 +27,10 @@ export default async function AdminPlayersPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
+
+  const t = await getTranslations("admin.players");
+  const tc = await getTranslations("admin.common");
+  const ago = (value?: string | null) => fmtAgo(value, (unit, n) => tc(`ago.${unit}`, { n }));
 
   const viewer = await requireStaff();
   if (!viewer) return null;
@@ -81,58 +85,55 @@ export default async function AdminPlayersPage({
 
   return (
     <>
-      <AdminPageHeader
-        title="Players"
-        description="Search by nickname, email or player id. Balances are an indicative USDT equivalent."
-      />
+      <AdminPageHeader title={t("title")} description={t("description")} />
 
       <AdminFilters
         basePath={BASE_PATH}
         values={filterValues}
         searchName="q"
-        searchPlaceholder="Nickname, email or player id"
+        searchPlaceholder={t("searchPlaceholder")}
         selects={[
           {
             name: "status",
-            label: "Status",
+            label: tc("columns.status"),
             options: [
-              { value: "", label: "All statuses" },
-              ...STATUS_VALUES.map((v) => ({ value: v, label: v })),
+              { value: "", label: tc("allStatuses") },
+              ...STATUS_VALUES.map((v) => ({ value: v, label: tc(`status.${v}`) })),
             ],
           },
           {
             name: "role",
-            label: "Role",
+            label: tc("columns.role"),
             options: [
-              { value: "", label: "All roles" },
-              ...ROLE_VALUES.map((v) => ({ value: v, label: v })),
+              { value: "", label: tc("allRoles") },
+              ...ROLE_VALUES.map((v) => ({ value: v, label: tc(`role.${v}`) })),
             ],
           },
         ]}
       />
 
       {error ? (
-        <EmptyState icon={Users} title="Could not load players" description={error.message} />
+        <EmptyState icon={Users} title={t("loadError")} description={error.message} />
       ) : (
         <>
           <TableScroller>
             <Table minWidth="min-w-[880px]">
               <thead>
                 <tr>
-                  <Th>Player id</Th>
-                  <Th>Nickname</Th>
-                  <Th>Email</Th>
-                  <Th>Status</Th>
-                  <Th>KYC</Th>
-                  <Th>Role</Th>
-                  <Th className="text-right">Balance (USDT eq.)</Th>
-                  <Th>Registered</Th>
-                  <Th>Last seen</Th>
+                  <Th>{tc("columns.playerId")}</Th>
+                  <Th>{tc("columns.nickname")}</Th>
+                  <Th>{tc("columns.email")}</Th>
+                  <Th>{tc("columns.status")}</Th>
+                  <Th>{tc("columns.kyc")}</Th>
+                  <Th>{tc("columns.role")}</Th>
+                  <Th className="text-right">{tc("columns.balanceUsdt")}</Th>
+                  <Th>{tc("columns.registered")}</Th>
+                  <Th>{tc("columns.lastSeen")}</Th>
                 </tr>
               </thead>
               <tbody>
                 {players.length === 0 ? (
-                  <EmptyRow colSpan={9} label="No players match these filters" />
+                  <EmptyRow colSpan={9} label={t("empty")} />
                 ) : (
                   players.map((player) => (
                     <Tr key={player.id}>
@@ -154,7 +155,7 @@ export default async function AdminPlayersPage({
                         {fmtUsdt(totals.get(player.id) ?? 0)}
                       </Td>
                       <Td className="text-content-tertiary">{fmtDate(player.created_at)}</Td>
-                      <Td className="text-content-tertiary">{fmtAgo(player.last_seen_at)}</Td>
+                      <Td className="text-content-tertiary">{ago(player.last_seen_at)}</Td>
                     </Tr>
                   ))
                 )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   ArrowLeftRight,
   LayoutDashboard,
@@ -11,21 +12,23 @@ import {
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/cn";
 
+type NavKey = "dashboard" | "players" | "transactions" | "support" | "bets" | "audit";
+
 interface NavItem {
   href: string;
-  label: string;
+  key: NavKey;
   icon: React.ComponentType<{ className?: string }>;
   exact?: boolean;
   adminOnly?: boolean;
 }
 
 const ITEMS: NavItem[] = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/players", label: "Players", icon: Users },
-  { href: "/admin/transactions", label: "Transactions", icon: ArrowLeftRight },
-  { href: "/admin/support", label: "Support", icon: LifeBuoy },
-  { href: "/admin/bets", label: "Bets", icon: Ticket },
-  { href: "/admin/audit", label: "Audit log", icon: ScrollText, adminOnly: true },
+  { href: "/admin", key: "dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin/players", key: "players", icon: Users },
+  { href: "/admin/transactions", key: "transactions", icon: ArrowLeftRight },
+  { href: "/admin/support", key: "support", icon: LifeBuoy },
+  { href: "/admin/bets", key: "bets", icon: Ticket },
+  { href: "/admin/audit", key: "audit", icon: ScrollText, adminOnly: true },
 ];
 
 export function AdminNav({
@@ -35,20 +38,21 @@ export function AdminNav({
   isAdmin: boolean;
   orientation?: "vertical" | "horizontal";
 }) {
+  const t = useTranslations("admin.nav");
   const pathname = usePathname();
   const items = ITEMS.filter((item) => !item.adminOnly || isAdmin);
   const horizontal = orientation === "horizontal";
 
   return (
     <nav
-      aria-label="Admin sections"
+      aria-label={t("sections")}
       className={cn(
         horizontal
           ? "no-scrollbar flex items-center gap-1 overflow-x-auto px-3 py-2"
           : "flex flex-col gap-1 p-3",
       )}
     >
-      {items.map(({ href, label, icon: Icon, exact }) => {
+      {items.map(({ href, key, icon: Icon, exact }) => {
         const active = exact ? pathname === href : pathname.startsWith(href);
         return (
           <Link
@@ -64,7 +68,7 @@ export function AdminNav({
             )}
           >
             <Icon className="size-4 shrink-0" />
-            {label}
+            {t(key)}
           </Link>
         );
       })}

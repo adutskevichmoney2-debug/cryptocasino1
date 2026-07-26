@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { LifeBuoy } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
@@ -26,6 +26,9 @@ export default async function AdminSupportPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
+
+  const t = await getTranslations("admin.support");
+  const tc = await getTranslations("admin.common");
 
   const viewer = await requireStaff();
   if (!viewer) return null;
@@ -79,7 +82,7 @@ export default async function AdminSupportPage({
       assigned_to: ticket.assigned_to,
       created_at: ticket.created_at,
       updated_at: ticket.updated_at,
-      playerNickname: player?.nickname ?? "Unknown player",
+      playerNickname: player?.nickname ?? t("unknownPlayer"),
       playerNumber: player?.player_id ?? null,
       playerAvatarId: avatars.get(ticket.user_id) ?? 0,
       assigneeNickname: ticket.assigned_to
@@ -91,8 +94,8 @@ export default async function AdminSupportPage({
   return (
     <>
       <AdminPageHeader
-        title="Support"
-        description={`Live inbox — new player messages arrive without a refresh. Showing the ${INBOX_LIMIT} most recently active tickets.`}
+        title={t("title")}
+        description={t("description", { limit: INBOX_LIMIT })}
       />
 
       <AdminFilters
@@ -101,25 +104,25 @@ export default async function AdminSupportPage({
         selects={[
           {
             name: "status",
-            label: "Status",
+            label: tc("columns.status"),
             options: [
-              { value: "", label: "Open + pending" },
-              ...STATUSES.map((v) => ({ value: v, label: v })),
+              { value: "", label: tc("openAndPending") },
+              ...STATUSES.map((v) => ({ value: v, label: tc(`ticketStatus.${v}`) })),
             ],
           },
           {
             name: "priority",
-            label: "Priority",
+            label: tc("columns.priority"),
             options: [
-              { value: "", label: "All priorities" },
-              ...PRIORITIES.map((v) => ({ value: v, label: v })),
+              { value: "", label: tc("allPriorities") },
+              ...PRIORITIES.map((v) => ({ value: v, label: tc(`ticketPriority.${v}`) })),
             ],
           },
         ]}
       />
 
       {error ? (
-        <EmptyState icon={LifeBuoy} title="Could not load tickets" description={error.message} />
+        <EmptyState icon={LifeBuoy} title={t("loadError")} description={error.message} />
       ) : (
         <SupportInbox
           initialTickets={tickets}

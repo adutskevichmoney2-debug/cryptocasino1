@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ScrollText } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
@@ -16,6 +16,11 @@ import { PAGE_SIZE, pageFrom, param, rangeFor, type RawSearchParams } from "@/co
 
 const BASE_PATH = "/admin/audit";
 
+/**
+ * Audit action codes as stored by the RPCs. The translation key is the same
+ * string with dots swapped for underscores, since next-intl treats a dot as a
+ * namespace separator.
+ */
 const ACTIONS = [
   "balance.adjust",
   "tx.approve",
@@ -24,7 +29,33 @@ const ACTIONS = [
   "account.kyc",
   "account.role",
   "account.note",
-];
+  "account.player_id",
+] as const;
+
+type AuditActionKey =
+  | "balance_adjust"
+  | "tx_approve"
+  | "tx_reject"
+  | "account_status"
+  | "account_kyc"
+  | "account_role"
+  | "account_note"
+  | "account_player_id";
+
+const ACTION_KEYS: Record<(typeof ACTIONS)[number], AuditActionKey> = {
+  "balance.adjust": "balance_adjust",
+  "tx.approve": "tx_approve",
+  "tx.reject": "tx_reject",
+  "account.status": "account_status",
+  "account.kyc": "account_kyc",
+  "account.role": "account_role",
+  "account.note": "account_note",
+  "account.player_id": "account_player_id",
+};
+
+function actionKey(action: string): AuditActionKey | null {
+  return ACTION_KEYS[action as (typeof ACTIONS)[number]] ?? null;
+}
 
 /** Renders the jsonb details column as compact `key: value` pairs. */
 function detailPairs(details: Record<string, unknown> | null): string {
@@ -44,6 +75,9 @@ export default async function AdminAuditPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
+
+  const t = await getTranslations("admin.audit");
+  const tc = await getTranslations("admin.common");
 
   // Admin-only on top of the RLS policy, which already restricts admin_actions.
   const viewer = await requireAdmin();
@@ -75,10 +109,7 @@ export default async function AdminAuditPage({
 
   return (
     <>
-      <AdminPageHeader
-        title="Audit log"
-        description="Every operator action against a player account. Insert-only and visible to admins."
-      />
+      <AdminPageHeader title={t("title")} description={t("description")} />
 
       <AdminFilters
         basePath={BASE_PATH}
@@ -86,38 +117,39 @@ export default async function AdminAuditPage({
         selects={[
           {
             name: "action",
-            label: "Action",
+            label: tc("columns.action"),
             options: [
-              { value: "", label: "All actions" },
-              ...ACTIONS.map((v) => ({ value: v, label: v })),
+              { value: "", label: tc("allActions") },
+              ...ACTIONS.map((v) => ({ value: v, label: tc(`auditAction.${ACTION_KEYS[v]}`) })),
             ],
           },
         ]}
       />
 
       {error ? (
-        <EmptyState icon={ScrollText} title="Could not load the audit log" description={error.message} />
+        <EmptyState icon={ScrollText} title={t("loadError")} description={error.message} />
       ) : (
         <>
           <TableScroller>
             <Table minWidth="min-w-[860px]">
               <thead>
                 <tr>
-                  <Th>When</Th>
-                  <Th>Actor</Th>
-                  <Th>Action</Th>
-                  <Th>Target player</Th>
-                  <Th>Details</Th>
-                  <Th>IP</Th>
+                  <Th>{tc("columns.when")}</Th>
+                  <Th>{tc("columns.actor")}</Th>
+                  <Th>{tc("columns.action")}</Th>
+                  <Th>{tc("columns.targetPlayer")}</Th>
+                  <Th>{tc("columns.details")}</Th>
+                  <Th>{tc("columns.ip")}</Th>
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 ? (
-                  <EmptyRow colSpan={6} label="No operator actions recorded yet" />
+                  <EmptyRow colSpan={6} label={t("empty")} />
                 ) : (
                   rows.map((row) => {
                     const actor = profiles.get(row.actor_id);
                     const target = row.target_user ? profiles.get(row.target_user) : undefined;
+                    const key = actionKey(row.action);
                     return (
                       <Tr key={row.id}>
                         <Td className="text-content-tertiary">{fmtDateTime(row.created_at)}</Td>
@@ -125,7 +157,9 @@ export default async function AdminAuditPage({
                           {actor?.nickname ?? shortId(row.actor_id)}
                         </Td>
                         <Td>
-                          <Badge variant="outline">{row.action}</Badge>
+                          <Badge variant="outline">
+                            {key ? tc(`auditAction.${key}`) : row.action}
+                          </Badge>
                         </Td>
                         <Td>
                           {row.target_user ? (

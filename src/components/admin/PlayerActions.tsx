@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { KeyRound, NotebookPen, ShieldCheck, SlidersHorizontal, Wallet } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Hash, KeyRound, NotebookPen, ShieldCheck, SlidersHorizontal, Wallet } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -16,7 +17,8 @@ import type {
   UserRole,
 } from "@/lib/supabase/types";
 import { ActionModal, NoteField } from "./ActionModal";
-import { errorText } from "./errors";
+import { KycBadge, RoleBadge, StatusBadge } from "./badges";
+import { useErrorText } from "./errors";
 import { fmtAmount } from "./format";
 
 const COINS: DbCoin[] = ["BTC", "ETH", "USDT", "USDC", "TRX", "SOL", "LTC", "DOGE"];
@@ -24,12 +26,14 @@ const ACCOUNT_STATUSES: AccountStatus[] = ["active", "frozen", "self_excluded", 
 const KYC_STATUSES: KycStatus[] = ["none", "pending", "verified", "rejected"];
 const ROLES: UserRole[] = ["player", "support", "admin"];
 
-const asOptions = (values: readonly string[]) => values.map((v) => ({ value: v, label: v }));
+/** Public account numbers are 4–12 digits, matching admin_set_player_id. */
+const PLAYER_ID_RE = /^\d{4,12}$/;
 
-type Dialog = "balance" | "status" | "kyc" | "role" | null;
+type Dialog = "balance" | "status" | "kyc" | "role" | "playerId" | null;
 
 export function PlayerActions({
   userId,
+  playerId,
   nickname,
   status,
   kycStatus,
@@ -39,6 +43,7 @@ export function PlayerActions({
   viewerId,
 }: {
   userId: string;
+  playerId: number;
   nickname: string;
   status: AccountStatus;
   kycStatus: KycStatus;
@@ -47,6 +52,9 @@ export function PlayerActions({
   viewerRole: UserRole;
   viewerId: string;
 }) {
+  const t = useTranslations("admin.player");
+  const tc = useTranslations("admin.common");
+  const errorText = useErrorText();
   const router = useRouter();
   const pushToast = useUiStore((s) => s.pushToast);
   const [dialog, setDialog] = useState<Dialog>(null);
@@ -66,12 +74,41 @@ export function PlayerActions({
   const [kycReason, setKycReason] = useState("");
   const [nextRole, setNextRole] = useState<UserRole>(role);
 
+  // Public player id
+  const [nextPlayerId, setNextPlayerId] = useState(String(playerId));
+  const [playerIdError, setPlayerIdError] = useState<string | null>(null);
+
   // Internal note
   const [internalNote, setInternalNote] = useState(note ?? "");
   const [savingNote, setSavingNote] = useState(false);
 
   const amountValue = Number(amount);
   const amountValid = amount.trim() !== "" && Number.isFinite(amountValue) && amountValue !== 0;
+
+  const trimmedPlayerId = nextPlayerId.trim();
+  const playerIdFormatValid = PLAYER_ID_RE.test(trimmedPlayerId);
+  const playerIdChanged = playerIdFormatValid && Number(trimmedPlayerId) !== playerId;
+
+  const strong = (chunks: React.ReactNode) => <strong className="text-content">{chunks}</strong>;
+  const code = (chunks: React.ReactNode) => <code className="font-mono text-xs">{chunks}</code>;
+
+  /** The option the account is on today is spelled out so it is never ambiguous. */
+  const withCurrent = (label: string, isCurrent: boolean) =>
+    isCurrent ? t("statusOptionCurrent", { label }) : label;
+
+  const statusOptions = ACCOUNT_STATUSES.map((v) => ({
+    value: v,
+    label: withCurrent(tc(`status.${v}`), v === status),
+  }));
+  const kycOptions = KYC_STATUSES.map((v) => ({
+    value: v,
+    label: withCurrent(tc(`kyc.${v}`), v === kycStatus),
+  }));
+  const roleOptions = ROLES.map((v) => ({
+    value: v,
+    label: withCurrent(tc(`role.${v}`), v === role),
+  }));
+  const coinOptions = COINS.map((v) => ({ value: v, label: v }));
 
   // PostgREST builders are thenable but not real Promises, so PromiseLike it is.
   const run = async (fn: () => PromiseLike<{ error: { message: string } | null }>, ok: string) => {
@@ -88,50 +125,103 @@ export function PlayerActions({
 
   const supabase = () => getSupabaseBrowserClient();
 
+  /**
+   * Player id gets its own submit: the RPC's raised codes are surfaced inline in
+   * the dialog as well as through the usual error toast.
+   */
+  const submitPlayerId = async () => {
+    setPlayerIdError(null);
+    if (!playerIdFormatValid) {
+      const message = tc("errors.player_id_invalid");
+      setPlayerIdError(message);
+      pushToast("error", message);
+      return;
+    }
+    try {
+      const { error } = await supabase().rpc("admin_set_player_id", {
+        p_user_id: userId,
+        p_player_id: Number(trimmedPlayerId),
+      });
+      if (error) throw error;
+      pushToast("success", t("playerIdDone", { id: trimmedPlayerId }));
+      setDialog(null);
+      router.refresh();
+    } catch (error) {
+      // player_id_taken / player_id_invalid / forbidden all have translated text.
+      const message = errorText(error);
+      setPlayerIdError(message);
+      pushToast("error", message);
+    }
+  };
+
+  /**
+   * Re-seed the form from the freshest props every time a dialog opens, so a
+   * router.refresh() (or a change made by another operator) can never leave a
+   * stale "next" value selected.
+   */
+  const openDialog = (next: Dialog) => {
+    if (next === "status") setNextStatus(status);
+    if (next === "kyc") setNextKyc(kycStatus);
+    if (next === "role") setNextRole(role);
+    if (next === "playerId") {
+      setNextPlayerId(String(playerId));
+      setPlayerIdError(null);
+    }
+    setDialog(next);
+  };
+
   return (
     <Card className="p-4">
-      <h2 className="font-display text-[15px] font-bold text-content">Actions</h2>
-      <p className="mt-0.5 text-xs text-content-tertiary">
-        Every action is written to the audit log with your operator id.
-      </p>
+      <h2 className="font-display text-[15px] font-bold text-content">{t("actionsTitle")}</h2>
+      <p className="mt-0.5 text-xs text-content-tertiary">{t("actionsHint")}</p>
+
+      <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px] text-content-tertiary">
+        <span>{t("statusCurrent")}:</span>
+        <StatusBadge status={status} />
+        <KycBadge status={kycStatus} />
+        <RoleBadge role={role} />
+        <span className="font-mono">#{playerId}</span>
+      </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
         {isAdmin && (
-          <Button size="sm" variant="secondary" onClick={() => setDialog("balance")}>
+          <Button size="sm" variant="secondary" onClick={() => openDialog("balance")}>
             <Wallet className="size-4" />
-            Adjust balance
+            {t("balanceAction")}
           </Button>
         )}
         {isAdmin && !isSelf && (
-          <Button size="sm" variant="secondary" onClick={() => setDialog("status")}>
+          <Button size="sm" variant="secondary" onClick={() => openDialog("status")}>
             <SlidersHorizontal className="size-4" />
-            Account status
+            {t("statusAction")}
           </Button>
         )}
-        <Button size="sm" variant="secondary" onClick={() => setDialog("kyc")}>
+        <Button size="sm" variant="secondary" onClick={() => openDialog("kyc")}>
           <ShieldCheck className="size-4" />
-          KYC status
+          {t("kycAction")}
         </Button>
         {isAdmin && !isSelf && (
-          <Button size="sm" variant="secondary" onClick={() => setDialog("role")}>
+          <Button size="sm" variant="secondary" onClick={() => openDialog("role")}>
             <KeyRound className="size-4" />
-            Change role
+            {t("roleAction")}
+          </Button>
+        )}
+        {isAdmin && (
+          <Button size="sm" variant="secondary" onClick={() => openDialog("playerId")}>
+            <Hash className="size-4" />
+            {t("playerIdAction")}
           </Button>
         )}
       </div>
 
-      {!isAdmin && (
-        <p className="mt-2.5 text-xs text-content-tertiary">
-          Balance, account status and role changes require an admin account.
-        </p>
-      )}
+      {!isAdmin && <p className="mt-2.5 text-xs text-content-tertiary">{t("adminRequired")}</p>}
 
       <div className="mt-4 border-t border-line pt-4">
         <NoteField
-          label="Internal note"
+          label={t("noteLabel")}
           value={internalNote}
           onValueChange={setInternalNote}
-          placeholder="Visible to staff only"
+          placeholder={t("notePlaceholder")}
           rows={4}
           maxLength={2000}
         />
@@ -148,7 +238,7 @@ export function PlayerActions({
                   p_note: internalNote,
                 });
                 if (error) throw error;
-                pushToast("success", "Internal note saved.");
+                pushToast("success", t("noteSaved"));
                 router.refresh();
               } catch (error) {
                 pushToast("error", errorText(error));
@@ -158,7 +248,7 @@ export function PlayerActions({
             }}
           >
             <NotebookPen className="size-4" />
-            Save note
+            {t("noteSave")}
           </Button>
         </div>
       </div>
@@ -167,21 +257,16 @@ export function PlayerActions({
       <ActionModal
         open={dialog === "balance"}
         onClose={() => setDialog(null)}
-        title="Adjust balance"
-        submitLabel="Apply adjustment"
+        title={t("balanceTitle")}
+        submitLabel={t("balanceSubmit")}
         danger={amountValue < 0}
         disabled={!amountValid}
-        summary={
-          <>
-            {amountValue > 0 ? "Credit" : "Debit"}{" "}
-            <strong className="text-content">
-              {fmtAmount(Math.abs(amountValue))} {coin}
-            </strong>{" "}
-            {amountValue > 0 ? "to" : "from"} <strong className="text-content">{nickname}</strong>.
-            An <code className="font-mono text-xs">adjustment</code> transaction is written to the
-            ledger and the player is notified.
-          </>
-        }
+        summary={t.rich(amountValue > 0 ? "balanceSummaryCredit" : "balanceSummaryDebit", {
+          amount: `${fmtAmount(Math.abs(amountValue))} ${coin}`,
+          nickname,
+          b: strong,
+          code,
+        })}
         onSubmit={() =>
           run(
             () =>
@@ -191,29 +276,29 @@ export function PlayerActions({
                 p_amount: amountValue,
                 p_note: balanceNote.trim() || null,
               }),
-            `Balance adjusted by ${fmtAmount(amountValue)} ${coin}.`,
+            t("balanceDone", { amount: `${fmtAmount(amountValue)} ${coin}` }),
           )
         }
       >
         <Select
-          label="Coin"
-          options={asOptions(COINS)}
+          label={t("balanceCoin")}
+          options={coinOptions}
           value={coin}
           onChange={(e) => setCoin(e.target.value as DbCoin)}
         />
         <Input
-          label="Signed amount"
+          label={t("balanceAmount")}
           inputMode="decimal"
-          placeholder="e.g. 25 or -10.5"
+          placeholder={t("balanceAmountPlaceholder")}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          hint="Positive credits the account, negative debits it."
+          hint={t("balanceAmountHint")}
         />
         <NoteField
-          label="Note (optional)"
+          label={t("balanceNote")}
           value={balanceNote}
           onValueChange={setBalanceNote}
-          placeholder="Reason for the adjustment"
+          placeholder={t("balanceNotePlaceholder")}
         />
       </ActionModal>
 
@@ -221,16 +306,19 @@ export function PlayerActions({
       <ActionModal
         open={dialog === "status"}
         onClose={() => setDialog(null)}
-        title="Change account status"
-        submitLabel="Change status"
+        title={t("statusTitle")}
+        submitLabel={t("statusSubmit")}
         danger={nextStatus === "banned" || nextStatus === "frozen"}
         disabled={nextStatus === status}
         summary={
           <>
-            Set <strong className="text-content">{nickname}</strong> from{" "}
-            <strong className="text-content">{status}</strong> to{" "}
-            <strong className="text-content">{nextStatus}</strong>.
-            {nextStatus !== "active" && " The player will be blocked from betting and depositing."}
+            {t.rich("statusSummary", {
+              nickname,
+              from: tc(`status.${status}`),
+              to: tc(`status.${nextStatus}`),
+              b: strong,
+            })}{" "}
+            {nextStatus === "active" ? t("statusSummaryUnblock") : t("statusSummaryBlock")}
           </>
         }
         onSubmit={() =>
@@ -241,21 +329,25 @@ export function PlayerActions({
                 p_status: nextStatus,
                 p_reason: statusReason.trim() || null,
               }),
-            `Account status set to ${nextStatus}.`,
+            t("statusDone", { status: tc(`status.${nextStatus}`) }),
           )
         }
       >
+        <div className="flex items-center gap-2 text-xs text-content-tertiary">
+          <span>{t("statusCurrent")}:</span>
+          <StatusBadge status={status} />
+        </div>
         <Select
-          label="Status"
-          options={asOptions(ACCOUNT_STATUSES)}
+          label={t("statusLabel")}
+          options={statusOptions}
           value={nextStatus}
           onChange={(e) => setNextStatus(e.target.value as AccountStatus)}
         />
         <NoteField
-          label="Reason"
+          label={t("statusReasonLabel")}
           value={statusReason}
           onValueChange={setStatusReason}
-          placeholder="Stored on the profile and in the audit log"
+          placeholder={t("statusReasonPlaceholder")}
         />
       </ActionModal>
 
@@ -263,18 +355,16 @@ export function PlayerActions({
       <ActionModal
         open={dialog === "kyc"}
         onClose={() => setDialog(null)}
-        title="Change KYC status"
-        submitLabel="Change KYC"
+        title={t("kycTitle")}
+        submitLabel={t("kycSubmit")}
         danger={nextKyc === "rejected"}
         disabled={nextKyc === kycStatus}
-        summary={
-          <>
-            Set KYC for <strong className="text-content">{nickname}</strong> from{" "}
-            <strong className="text-content">{kycStatus}</strong> to{" "}
-            <strong className="text-content">{nextKyc}</strong>. The player receives a
-            notification.
-          </>
-        }
+        summary={t.rich("kycSummary", {
+          nickname,
+          from: tc(`kyc.${kycStatus}`),
+          to: tc(`kyc.${nextKyc}`),
+          b: strong,
+        })}
         onSubmit={() =>
           run(
             () =>
@@ -283,21 +373,25 @@ export function PlayerActions({
                 p_status: nextKyc,
                 p_reason: kycReason.trim() || null,
               }),
-            `KYC status set to ${nextKyc}.`,
+            t("kycDone", { status: tc(`kyc.${nextKyc}`) }),
           )
         }
       >
+        <div className="flex items-center gap-2 text-xs text-content-tertiary">
+          <span>{t("kycCurrent")}:</span>
+          <KycBadge status={kycStatus} />
+        </div>
         <Select
-          label="KYC status"
-          options={asOptions(KYC_STATUSES)}
+          label={t("kycLabel")}
+          options={kycOptions}
           value={nextKyc}
           onChange={(e) => setNextKyc(e.target.value as KycStatus)}
         />
         <NoteField
-          label="Reason"
+          label={t("kycReasonLabel")}
           value={kycReason}
           onValueChange={setKycReason}
-          placeholder="Why the decision was taken"
+          placeholder={t("kycReasonPlaceholder")}
         />
       </ActionModal>
 
@@ -305,31 +399,81 @@ export function PlayerActions({
       <ActionModal
         open={dialog === "role"}
         onClose={() => setDialog(null)}
-        title="Change role"
-        submitLabel="Change role"
+        title={t("roleTitle")}
+        submitLabel={t("roleSubmit")}
         danger={nextRole === "admin"}
         disabled={nextRole === role}
         summary={
           <>
-            Change <strong className="text-content">{nickname}</strong> from{" "}
-            <strong className="text-content">{role}</strong> to{" "}
-            <strong className="text-content">{nextRole}</strong>.
-            {nextRole !== "player" && " This grants access to the operator panel."}
+            {t.rich("roleSummary", {
+              nickname,
+              from: tc(`role.${role}`),
+              to: tc(`role.${nextRole}`),
+              b: strong,
+            })}{" "}
+            {nextRole === "player" ? t("roleSummaryRevoke") : t("roleSummaryGrant")}
           </>
         }
         onSubmit={() =>
           run(
             () => supabase().rpc("admin_set_role", { p_user_id: userId, p_role: nextRole }),
-            `Role set to ${nextRole}.`,
+            t("roleDone", { role: tc(`role.${nextRole}`) }),
           )
         }
       >
+        <div className="flex items-center gap-2 text-xs text-content-tertiary">
+          <span>{t("roleCurrent")}:</span>
+          <RoleBadge role={role} />
+        </div>
         <Select
-          label="Role"
-          options={asOptions(ROLES)}
+          label={t("roleLabel")}
+          options={roleOptions}
           value={nextRole}
           onChange={(e) => setNextRole(e.target.value as UserRole)}
         />
+      </ActionModal>
+
+      {/* ── Public player id ───────────────────────────────────────────── */}
+      <ActionModal
+        open={dialog === "playerId"}
+        onClose={() => setDialog(null)}
+        title={t("playerIdTitle")}
+        submitLabel={t("playerIdSubmit")}
+        disabled={!playerIdChanged}
+        error={playerIdError}
+        summary={t.rich("playerIdSummary", {
+          nickname,
+          from: `#${playerId}`,
+          to: `#${trimmedPlayerId}`,
+          b: strong,
+        })}
+        onSubmit={submitPlayerId}
+      >
+        <div className="flex items-center gap-2 text-xs text-content-tertiary">
+          <span>{t("playerIdCurrent")}:</span>
+          <span className="font-mono text-content">#{playerId}</span>
+        </div>
+        <Input
+          label={t("playerIdLabel")}
+          inputMode="numeric"
+          pattern="\d*"
+          maxLength={12}
+          placeholder={t("playerIdPlaceholder")}
+          value={nextPlayerId}
+          onChange={(e) => {
+            setNextPlayerId(e.target.value.replace(/\D/g, ""));
+            setPlayerIdError(null);
+          }}
+          error={
+            trimmedPlayerId !== "" && !playerIdFormatValid
+              ? tc("errors.player_id_invalid")
+              : undefined
+          }
+          hint={t("playerIdHint")}
+        />
+        {playerIdFormatValid && !playerIdChanged && (
+          <p className="text-xs text-content-tertiary">{t("playerIdSame")}</p>
+        )}
       </ActionModal>
     </Card>
   );

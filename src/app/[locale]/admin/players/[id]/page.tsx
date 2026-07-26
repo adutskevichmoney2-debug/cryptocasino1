@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
 import { Link } from "@/i18n/navigation";
@@ -49,6 +49,18 @@ export default async function AdminPlayerDetailPage({
 }) {
   const { locale, id } = await params;
   setRequestLocale(locale as Locale);
+
+  const t = await getTranslations("admin.player");
+  const tc = await getTranslations("admin.common");
+  const ago = (value?: string | null) => fmtAgo(value, (unit, n) => tc(`ago.${unit}`, { n }));
+
+  /** device_type is a free-text column — translate the values we know, pass the rest through. */
+  const deviceLabel = (value: string | null) => {
+    if (value === "desktop" || value === "mobile" || value === "tablet") {
+      return tc(`deviceType.${value}`);
+    }
+    return value ?? DASH;
+  };
 
   const viewer = await requireStaff();
   if (!viewer) return null;
@@ -123,7 +135,7 @@ export default async function AdminPlayerDetailPage({
         className="mb-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-content-tertiary transition-colors duration-120 hover:text-content"
       >
         <ArrowLeft className="size-4" />
-        All players
+        {t("backToList")}
       </Link>
 
       <div className="mb-5 flex flex-wrap items-center gap-3">
@@ -146,40 +158,46 @@ export default async function AdminPlayerDetailPage({
       <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex min-w-0 flex-col gap-6">
           {/* ── Overview ─────────────────────────────────────────────── */}
-          <Section title="Overview">
+          <Section title={t("overview")}>
             <Card className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3">
-              <Field label="User id">
+              <Field label={t("userId")}>
                 <span className="font-mono text-xs">{player.id}</span>
               </Field>
-              <Field label="Player id">#{player.player_id}</Field>
-              <Field label="Referral code">
+              <Field label={t("playerId")}>#{player.player_id}</Field>
+              <Field label={t("refCode")}>
                 <span className="font-mono text-xs">{player.ref_code}</span>
               </Field>
-              <Field label="Referred by">
+              <Field label={t("referredBy")}>
                 <span className="font-mono text-xs">{player.referred_by ?? DASH}</span>
               </Field>
-              <Field label="XP">{num(player.xp).toLocaleString("en-US")}</Field>
-              <Field label="Wagered total">{fmtAmount(player.wagered_total, 2)}</Field>
-              <Field label="Two-factor">{player.two_factor_enabled ? "Enabled" : "Disabled"}</Field>
-              <Field label="Registered">{fmtDateTime(player.created_at)}</Field>
-              <Field label="Last seen">
-                {fmtAgo(player.last_seen_at)}
+              <Field label={t("xp")}>{num(player.xp).toLocaleString("en-US")}</Field>
+              <Field label={t("wageredTotal")}>{fmtAmount(player.wagered_total, 2)}</Field>
+              <Field label={t("twoFactor")}>
+                {player.two_factor_enabled ? t("enabled") : t("disabled")}
+              </Field>
+              <Field label={t("registered")}>{fmtDateTime(player.created_at)}</Field>
+              <Field label={t("lastSeen")}>
+                {ago(player.last_seen_at)}
                 <span className="ml-1 text-[11px] text-content-tertiary">
                   {player.last_seen_at ? `(${fmtDateTime(player.last_seen_at)})` : ""}
                 </span>
               </Field>
-              <Field label="Status reason">{player.status_reason ?? DASH}</Field>
-              <Field label="Status changed">
+              <Field label={t("statusReason")}>{player.status_reason ?? DASH}</Field>
+              <Field label={t("statusChanged")}>
                 {player.status_changed_at ? fmtDateTime(player.status_changed_at) : DASH}
                 {changedBy && (
-                  <span className="ml-1 text-[11px] text-content-tertiary">by {changedBy}</span>
+                  <span className="ml-1 text-[11px] text-content-tertiary">
+                    {t("changedBy", { name: changedBy })}
+                  </span>
                 )}
               </Field>
-              <Field label="Total balance">
-                <span className="font-semibold text-content">{fmtUsdt(totalUsdt)} USDT eq.</span>
+              <Field label={t("totalBalance")}>
+                <span className="font-semibold text-content">
+                  {fmtUsdt(totalUsdt)} {tc("usdtEq")}
+                </span>
               </Field>
               <div className="col-span-2 sm:col-span-3">
-                <Field label="Internal note">
+                <Field label={t("internalNote")}>
                   <span className="whitespace-pre-wrap text-content-secondary">
                     {player.internal_note?.trim() || DASH}
                   </span>
@@ -189,20 +207,20 @@ export default async function AdminPlayerDetailPage({
           </Section>
 
           {/* ── Balances ─────────────────────────────────────────────── */}
-          <Section title="Balances" description="Per coin, with indicative USDT value">
+          <Section title={t("balancesTitle")} description={t("balancesDescription")}>
             <TableScroller>
               <Table minWidth="min-w-[420px]">
                 <thead>
                   <tr>
-                    <Th>Coin</Th>
-                    <Th className="text-right">Amount</Th>
-                    <Th className="text-right">USDT eq.</Th>
-                    <Th>Updated</Th>
+                    <Th>{tc("columns.coin")}</Th>
+                    <Th className="text-right">{tc("columns.amount")}</Th>
+                    <Th className="text-right">{tc("columns.usdtEq")}</Th>
+                    <Th>{tc("columns.updated")}</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {balanceRows.length === 0 ? (
-                    <EmptyRow colSpan={4} label="No balance rows" />
+                    <EmptyRow colSpan={4} label={t("balancesEmpty")} />
                   ) : (
                     balanceRows.map((balance) => (
                       <Tr key={balance.coin}>
@@ -224,14 +242,14 @@ export default async function AdminPlayerDetailPage({
 
           {/* ── Transactions ─────────────────────────────────────────── */}
           <Section
-            title="Transactions"
-            description={`Latest ${ROW_LIMIT}`}
+            title={t("transactionsTitle")}
+            description={t("latest", { count: ROW_LIMIT })}
             action={
               <Link
                 href="/admin/transactions"
                 className="text-[13px] font-semibold text-accent hover:underline"
               >
-                All transactions
+                {t("allTransactions")}
               </Link>
             }
           >
@@ -239,22 +257,22 @@ export default async function AdminPlayerDetailPage({
               <Table minWidth="min-w-[720px]">
                 <thead>
                   <tr>
-                    <Th>Type</Th>
-                    <Th className="text-right">Amount</Th>
-                    <Th className="text-right">Fee</Th>
-                    <Th className="text-right">Balance after</Th>
-                    <Th>Status</Th>
-                    <Th>Note</Th>
-                    <Th>Created</Th>
+                    <Th>{tc("columns.type")}</Th>
+                    <Th className="text-right">{tc("columns.amount")}</Th>
+                    <Th className="text-right">{tc("columns.fee")}</Th>
+                    <Th className="text-right">{tc("columns.balanceAfter")}</Th>
+                    <Th>{tc("columns.status")}</Th>
+                    <Th>{tc("columns.note")}</Th>
+                    <Th>{tc("columns.created")}</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {txRows.length === 0 ? (
-                    <EmptyRow colSpan={7} label="No transactions" />
+                    <EmptyRow colSpan={7} label={t("transactionsEmpty")} />
                   ) : (
                     txRows.map((tx) => (
                       <Tr key={tx.id}>
-                        <Td className="capitalize text-content">{tx.type}</Td>
+                        <Td className="text-content">{tc(`txType.${tx.type}`)}</Td>
                         <Td
                           className={`text-right font-semibold tabular-nums ${
                             CREDIT_TYPES.includes(tx.type) ? "text-success" : "text-content"
@@ -281,28 +299,28 @@ export default async function AdminPlayerDetailPage({
           </Section>
 
           {/* ── Bets ─────────────────────────────────────────────────── */}
-          <Section title="Bets" description={`Latest ${ROW_LIMIT} sports bets`}>
+          <Section title={t("betsTitle")} description={t("betsDescription", { count: ROW_LIMIT })}>
             <TableScroller>
               <Table minWidth="min-w-[620px]">
                 <thead>
                   <tr>
-                    <Th>Bet</Th>
-                    <Th>Type</Th>
-                    <Th className="text-right">Stake</Th>
-                    <Th className="text-right">Odds</Th>
-                    <Th className="text-right">Payout</Th>
-                    <Th>Status</Th>
-                    <Th>Created</Th>
+                    <Th>{tc("columns.bet")}</Th>
+                    <Th>{tc("columns.type")}</Th>
+                    <Th className="text-right">{tc("columns.stake")}</Th>
+                    <Th className="text-right">{tc("columns.odds")}</Th>
+                    <Th className="text-right">{tc("columns.payout")}</Th>
+                    <Th>{tc("columns.status")}</Th>
+                    <Th>{tc("columns.created")}</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {betRows.length === 0 ? (
-                    <EmptyRow colSpan={7} label="No bets" />
+                    <EmptyRow colSpan={7} label={t("betsEmpty")} />
                   ) : (
                     betRows.map((bet) => (
                       <Tr key={bet.id}>
                         <Td className="font-mono text-xs">{shortId(bet.id)}</Td>
-                        <Td className="capitalize">{bet.bet_type}</Td>
+                        <Td>{tc(`betType.${bet.bet_type}`)}</Td>
                         <Td className="text-right tabular-nums text-content">
                           {fmtAmount(bet.stake)} {bet.coin}
                         </Td>
@@ -323,21 +341,24 @@ export default async function AdminPlayerDetailPage({
           </Section>
 
           {/* ── Game rounds ──────────────────────────────────────────── */}
-          <Section title="Game rounds" description={`Latest ${ROW_LIMIT} casino rounds`}>
+          <Section
+            title={t("roundsTitle")}
+            description={t("roundsDescription", { count: ROW_LIMIT })}
+          >
             <TableScroller>
               <Table minWidth="min-w-[560px]">
                 <thead>
                   <tr>
-                    <Th>Game</Th>
-                    <Th>Provider</Th>
-                    <Th className="text-right">Bet</Th>
-                    <Th className="text-right">Win</Th>
-                    <Th>Played</Th>
+                    <Th>{tc("columns.game")}</Th>
+                    <Th>{tc("columns.provider")}</Th>
+                    <Th className="text-right">{tc("columns.bet")}</Th>
+                    <Th className="text-right">{tc("columns.win")}</Th>
+                    <Th>{tc("columns.played")}</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {roundRows.length === 0 ? (
-                    <EmptyRow colSpan={5} label="No game rounds" />
+                    <EmptyRow colSpan={5} label={t("roundsEmpty")} />
                   ) : (
                     roundRows.map((round) => (
                       <Tr key={round.id}>
@@ -363,28 +384,28 @@ export default async function AdminPlayerDetailPage({
           </Section>
 
           {/* ── Sessions ─────────────────────────────────────────────── */}
-          <Section title="Sessions" description="Devices and locations seen on this account">
+          <Section title={t("sessionsTitle")} description={t("sessionsDescription")}>
             <TableScroller>
               <Table minWidth="min-w-[760px]">
                 <thead>
                   <tr>
-                    <Th>IP</Th>
-                    <Th>Device</Th>
-                    <Th>Browser</Th>
-                    <Th>OS</Th>
-                    <Th>Location</Th>
-                    <Th>First seen</Th>
-                    <Th>Last seen</Th>
+                    <Th>{tc("columns.ip")}</Th>
+                    <Th>{tc("columns.device")}</Th>
+                    <Th>{tc("columns.browser")}</Th>
+                    <Th>{tc("columns.os")}</Th>
+                    <Th>{tc("columns.location")}</Th>
+                    <Th>{tc("columns.firstSeen")}</Th>
+                    <Th>{tc("columns.lastSeen")}</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {sessionRows.length === 0 ? (
-                    <EmptyRow colSpan={7} label="No sessions recorded" />
+                    <EmptyRow colSpan={7} label={t("sessionsEmpty")} />
                   ) : (
                     sessionRows.map((session) => (
                       <Tr key={session.id}>
                         <Td className="font-mono text-xs text-content">{session.ip ?? DASH}</Td>
-                        <Td className="capitalize">{session.device_type ?? DASH}</Td>
+                        <Td>{deviceLabel(session.device_type)}</Td>
                         <Td>{session.browser ?? DASH}</Td>
                         <Td>{session.os ?? DASH}</Td>
                         <Td>
@@ -403,21 +424,21 @@ export default async function AdminPlayerDetailPage({
           </Section>
 
           {/* ── Bonuses ──────────────────────────────────────────────── */}
-          <Section title="Bonuses" description="Claimed promo codes and wagering progress">
+          <Section title={t("bonusesTitle")} description={t("bonusesDescription")}>
             <TableScroller>
               <Table minWidth="min-w-[600px]">
                 <thead>
                   <tr>
-                    <Th>Code</Th>
-                    <Th className="text-right">Amount</Th>
-                    <Th className="text-right">Wagered</Th>
-                    <Th>Claimed</Th>
-                    <Th>Expires</Th>
+                    <Th>{tc("columns.code")}</Th>
+                    <Th className="text-right">{tc("columns.amount")}</Th>
+                    <Th className="text-right">{tc("columns.wagered")}</Th>
+                    <Th>{tc("columns.claimed")}</Th>
+                    <Th>{tc("columns.expires")}</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {bonusRows.length === 0 ? (
-                    <EmptyRow colSpan={5} label="No bonuses claimed" />
+                    <EmptyRow colSpan={5} label={t("bonusesEmpty")} />
                   ) : (
                     bonusRows.map((bonus) => (
                       <Tr key={bonus.id}>
@@ -439,21 +460,21 @@ export default async function AdminPlayerDetailPage({
           </Section>
 
           {/* ── Support tickets ──────────────────────────────────────── */}
-          <Section title="Support tickets">
+          <Section title={t("ticketsTitle")}>
             <TableScroller>
               <Table minWidth="min-w-[560px]">
                 <thead>
                   <tr>
-                    <Th>Subject</Th>
-                    <Th>Topic</Th>
-                    <Th>Status</Th>
-                    <Th>Priority</Th>
-                    <Th>Updated</Th>
+                    <Th>{tc("columns.subject")}</Th>
+                    <Th>{tc("columns.topic")}</Th>
+                    <Th>{tc("columns.status")}</Th>
+                    <Th>{tc("columns.priority")}</Th>
+                    <Th>{tc("columns.updated")}</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {ticketRows.length === 0 ? (
-                    <EmptyRow colSpan={5} label="No tickets" />
+                    <EmptyRow colSpan={5} label={t("ticketsEmpty")} />
                   ) : (
                     ticketRows.map((ticket) => (
                       <Tr key={ticket.id}>
@@ -481,6 +502,7 @@ export default async function AdminPlayerDetailPage({
         <div className="min-w-0 xl:sticky xl:top-[72px] xl:self-start">
           <PlayerActions
             userId={player.id}
+            playerId={Number(player.player_id)}
             nickname={player.nickname}
             status={player.status}
             kycStatus={player.kyc_status}

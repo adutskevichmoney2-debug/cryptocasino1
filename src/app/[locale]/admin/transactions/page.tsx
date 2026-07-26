@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowLeftRight } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
@@ -31,6 +31,9 @@ export default async function AdminTransactionsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
+
+  const t = await getTranslations("admin.transactions");
+  const tc = await getTranslations("admin.common");
 
   const viewer = await requireStaff();
   if (!viewer) return null;
@@ -66,10 +69,7 @@ export default async function AdminTransactionsPage({
 
   return (
     <>
-      <AdminPageHeader
-        title="Transactions"
-        description="The full ledger. Pending deposits and withdrawals can be approved or rejected here."
-      />
+      <AdminPageHeader title={t("title")} description={t("description")} />
 
       <AdminFilters
         basePath={BASE_PATH}
@@ -77,25 +77,25 @@ export default async function AdminTransactionsPage({
         selects={[
           {
             name: "status",
-            label: "Status",
+            label: tc("columns.status"),
             options: [
-              { value: "", label: "All statuses" },
-              ...STATUSES.map((v) => ({ value: v, label: v })),
+              { value: "", label: tc("allStatuses") },
+              ...STATUSES.map((v) => ({ value: v, label: tc(`txStatus.${v}`) })),
             ],
           },
           {
             name: "type",
-            label: "Type",
+            label: tc("columns.type"),
             options: [
-              { value: "", label: "All types" },
-              ...TYPES.map((v) => ({ value: v, label: v })),
+              { value: "", label: tc("allTypes") },
+              ...TYPES.map((v) => ({ value: v, label: tc(`txType.${v}`) })),
             ],
           },
           {
             name: "coin",
-            label: "Coin",
+            label: tc("columns.coin"),
             options: [
-              { value: "", label: "All coins" },
+              { value: "", label: tc("allCoins") },
               ...COINS.map((v) => ({ value: v, label: v })),
             ],
           },
@@ -103,31 +103,27 @@ export default async function AdminTransactionsPage({
       />
 
       {error ? (
-        <EmptyState
-          icon={ArrowLeftRight}
-          title="Could not load transactions"
-          description={error.message}
-        />
+        <EmptyState icon={ArrowLeftRight} title={t("loadError")} description={error.message} />
       ) : (
         <>
           <TableScroller>
             <Table minWidth="min-w-[1040px]">
               <thead>
                 <tr>
-                  <Th>Tx</Th>
-                  <Th>Player</Th>
-                  <Th>Type</Th>
-                  <Th className="text-right">Amount</Th>
-                  <Th className="text-right">USDT eq.</Th>
-                  <Th>Status</Th>
-                  <Th>Network / address</Th>
-                  <Th>Created</Th>
-                  <Th>Review</Th>
+                  <Th>{tc("columns.tx")}</Th>
+                  <Th>{tc("columns.player")}</Th>
+                  <Th>{tc("columns.type")}</Th>
+                  <Th className="text-right">{tc("columns.amount")}</Th>
+                  <Th className="text-right">{tc("columns.usdtEq")}</Th>
+                  <Th>{tc("columns.status")}</Th>
+                  <Th>{tc("columns.networkAddress")}</Th>
+                  <Th>{tc("columns.created")}</Th>
+                  <Th>{tc("columns.review")}</Th>
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 ? (
-                  <EmptyRow colSpan={9} label="No transactions match these filters" />
+                  <EmptyRow colSpan={9} label={t("empty")} />
                 ) : (
                   rows.map((tx) => {
                     const player = profiles.get(tx.user_id);
@@ -142,7 +138,7 @@ export default async function AdminTransactionsPage({
                             {player?.nickname ?? shortId(tx.user_id)}
                           </RowLink>
                         </Td>
-                        <Td className="capitalize text-content">{tx.type}</Td>
+                        <Td className="text-content">{tc(`txType.${tx.type}`)}</Td>
                         <Td
                           className={`text-right font-semibold tabular-nums ${
                             CREDIT_TYPES.includes(tx.type) ? "text-success" : "text-content"

@@ -1,9 +1,10 @@
 /**
- * Formatting helpers for the operator panel. English-only by design — the admin
- * UI is staff-facing and deliberately skips next-intl.
+ * Formatting helpers for the operator panel.
  *
- * All timestamps render in UTC so the same row reads identically for every
- * operator (and so server HTML matches client hydration).
+ * All timestamps render in UTC with a fixed en-GB skeleton so the same row reads
+ * identically for every operator regardless of the UI language (and so server
+ * HTML matches client hydration). Only the surrounding labels are translated —
+ * relative times take a label callback from the caller's translator.
  */
 import { formatCrypto } from "@/lib/format";
 import { RATES } from "@/services/mock/fixtures/coins";
@@ -72,29 +73,32 @@ export function fmtUsdt(value: number): string {
   return formatCrypto(value, 2);
 }
 
-/** "3m ago" / "2d ago" — compact enough for a table cell. */
-export function fmtAgo(value?: string | null): string {
+export type AgoUnit = "seconds" | "minutes" | "hours" | "days";
+
+/**
+ * "3m ago" / "2d ago" — compact enough for a table cell. The caller supplies the
+ * localised label so this module stays free of next-intl (it also runs on the
+ * server pages, which resolve their own translator).
+ */
+export function fmtAgo(
+  value: string | null | undefined,
+  label: (unit: AgoUnit, n: number) => string,
+): string {
   if (!value) return DASH;
   const then = new Date(value).getTime();
   if (Number.isNaN(then)) return DASH;
   const seconds = Math.max(0, Math.round((Date.now() - then) / 1000));
-  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 60) return label("seconds", seconds);
   const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return label("minutes", minutes);
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return label("hours", hours);
   const days = Math.round(hours / 24);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return label("days", days);
   return fmtDate(value);
 }
 
 /** 8f3c1a2b-… -> 8f3c1a2b */
 export function shortId(id: string): string {
   return id.split("-")[0] ?? id;
-}
-
-/** Human label for an enum-ish value: self_excluded -> Self excluded */
-export function humanize(value: string): string {
-  const s = value.replace(/[_.]/g, " ");
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, Inbox, MessageSquare, Send, UserCheck } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
@@ -15,7 +16,7 @@ import { cn } from "@/lib/cn";
 import type { SupportMessageRow, TicketPriority, TicketStatus } from "@/lib/supabase/types";
 import { TicketPriorityBadge, TicketStatusBadge } from "./badges";
 import { fmtDateTime, fmtAgo } from "./format";
-import { errorText } from "./errors";
+import { useErrorText } from "./errors";
 
 export interface AdminTicket {
   id: string;
@@ -35,7 +36,6 @@ export interface AdminTicket {
 
 const STATUS_OPTIONS: TicketStatus[] = ["open", "pending", "resolved", "closed"];
 const PRIORITY_OPTIONS: TicketPriority[] = ["low", "normal", "high", "urgent"];
-const asOptions = (values: readonly string[]) => values.map((v) => ({ value: v, label: v }));
 
 export function SupportInbox({
   initialTickets,
@@ -46,8 +46,18 @@ export function SupportInbox({
   viewerId: string;
   viewerNickname: string;
 }) {
+  const t = useTranslations("admin.support");
+  const tc = useTranslations("admin.common");
+  const errorText = useErrorText();
   const router = useRouter();
   const pushToast = useUiStore((s) => s.pushToast);
+
+  const ago = (value?: string | null) => fmtAgo(value, (unit, n) => tc(`ago.${unit}`, { n }));
+  const statusOptions = STATUS_OPTIONS.map((v) => ({ value: v, label: tc(`ticketStatus.${v}`) }));
+  const priorityOptions = PRIORITY_OPTIONS.map((v) => ({
+    value: v,
+    label: tc(`ticketPriority.${v}`),
+  }));
 
   const [tickets, setTickets] = useState(initialTickets);
   const [selectedId, setSelectedId] = useState<string | null>(initialTickets[0]?.id ?? null);
@@ -105,7 +115,7 @@ export function SupportInbox({
     return () => {
       cancelled = true;
     };
-  }, [selectedId, pushToast]);
+  }, [selectedId, pushToast, errorText]);
 
   // Realtime: new player messages land without a refresh.
   useEffect(() => {
@@ -191,11 +201,7 @@ export function SupportInbox({
 
   if (tickets.length === 0) {
     return (
-      <EmptyState
-        icon={Inbox}
-        title="No tickets match these filters"
-        description="Adjust the status or priority filter to see more of the inbox."
-      />
+      <EmptyState icon={Inbox} title={t("emptyTitle")} description={t("emptyDescription")} />
     );
   }
 
@@ -204,7 +210,7 @@ export function SupportInbox({
       {/* ── Ticket list ──────────────────────────────────────────────── */}
       <Card className={cn("min-w-0 overflow-hidden", selected && "max-lg:hidden")}>
         <p className="border-b border-line px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-content-tertiary">
-          {tickets.length} ticket{tickets.length === 1 ? "" : "s"}
+          {t("ticketCount", { count: tickets.length })}
         </p>
         <ul className="max-h-[70dvh] divide-y divide-line overflow-y-auto">
           {tickets.map((ticket) => (
@@ -237,7 +243,7 @@ export function SupportInbox({
                   <TicketStatusBadge status={ticket.status} />
                   <TicketPriorityBadge priority={ticket.priority} />
                   <span className="ml-auto text-[11px] text-content-tertiary">
-                    {fmtAgo(ticket.updated_at)}
+                    {ago(ticket.updated_at)}
                   </span>
                 </div>
               </button>
@@ -257,7 +263,7 @@ export function SupportInbox({
               onClick={() => setSelectedId(null)}
             >
               <ArrowLeft className="size-4" />
-              Back
+              {tc("back")}
             </Button>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-bold text-content">{selected.subject}</p>
@@ -269,8 +275,8 @@ export function SupportInbox({
                   {selected.playerNickname}
                 </Link>
                 {selected.playerNumber !== null && ` · #${selected.playerNumber}`}
-                {selected.topic && ` · ${selected.topic}`} · opened{" "}
-                {fmtDateTime(selected.created_at)}
+                {selected.topic && ` · ${selected.topic}`} ·{" "}
+                {t("opened", { date: fmtDateTime(selected.created_at) })}
               </p>
             </div>
           </div>
@@ -278,27 +284,24 @@ export function SupportInbox({
           <div className="flex flex-wrap items-center gap-2 border-b border-line px-3 py-2">
             <div className="w-32">
               <Select
-                aria-label="Ticket status"
-                options={asOptions(STATUS_OPTIONS)}
+                aria-label={t("statusAria")}
+                options={statusOptions}
                 value={selected.status}
                 disabled={updating}
                 onChange={(e) =>
-                  patchTicket({ status: e.target.value as TicketStatus }, "Ticket status updated.")
+                  patchTicket({ status: e.target.value as TicketStatus }, t("statusUpdated"))
                 }
                 className="h-8 text-[13px]"
               />
             </div>
             <div className="w-32">
               <Select
-                aria-label="Ticket priority"
-                options={asOptions(PRIORITY_OPTIONS)}
+                aria-label={t("priorityAria")}
+                options={priorityOptions}
                 value={selected.priority}
                 disabled={updating}
                 onChange={(e) =>
-                  patchTicket(
-                    { priority: e.target.value as TicketPriority },
-                    "Ticket priority updated.",
-                  )
+                  patchTicket({ priority: e.target.value as TicketPriority }, t("priorityUpdated"))
                 }
                 className="h-8 text-[13px]"
               />
@@ -310,16 +313,16 @@ export function SupportInbox({
               onClick={() =>
                 patchTicket(
                   { assigned_to: viewerId, assigneeNickname: viewerNickname },
-                  "Ticket assigned to you.",
+                  t("assigned"),
                 )
               }
             >
               <UserCheck className="size-3.5" />
               {selected.assigned_to === viewerId
-                ? "Assigned to you"
+                ? t("assignedToYou")
                 : selected.assigneeNickname
-                  ? `Assigned: ${selected.assigneeNickname}`
-                  : "Assign to me"}
+                  ? t("assignedTo", { name: selected.assigneeNickname })
+                  : t("assignToMe")}
             </Button>
           </div>
 
@@ -333,8 +336,8 @@ export function SupportInbox({
             ) : messages.length === 0 ? (
               <EmptyState
                 icon={MessageSquare}
-                title="No messages yet"
-                description="Start the conversation with a reply below."
+                title={t("noMessagesTitle")}
+                description={t("noMessagesDescription")}
                 className="border-0"
               />
             ) : (
@@ -350,7 +353,7 @@ export function SupportInbox({
                 >
                   <p className="whitespace-pre-wrap break-words">{message.body}</p>
                   <p className="mt-1 text-[10px] uppercase tracking-wide text-content-tertiary">
-                    {message.is_staff ? "Staff" : selected.playerNickname} ·{" "}
+                    {message.is_staff ? t("staff") : selected.playerNickname} ·{" "}
                     {fmtDateTime(message.created_at)}
                   </p>
                 </div>
@@ -370,7 +373,7 @@ export function SupportInbox({
               value={reply}
               rows={2}
               maxLength={4000}
-              placeholder="Reply as staff…"
+              placeholder={t("replyPlaceholder")}
               onChange={(e) => setReply(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
@@ -382,7 +385,7 @@ export function SupportInbox({
             />
             <Button type="submit" size="sm" loading={sending} disabled={!reply.trim()}>
               <Send className="size-4" />
-              Send
+              {t("send")}
             </Button>
           </form>
         </Card>

@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/Badge";
 import type {
   AccountStatus,
@@ -9,7 +10,6 @@ import type {
   TicketStatus,
   UserRole,
 } from "@/lib/supabase/types";
-import { humanize } from "./format";
 
 type Variant = "neutral" | "accent" | "success" | "danger" | "warning" | "outline";
 
@@ -66,30 +66,41 @@ const TICKET_PRIORITY: Record<TicketPriority, Variant> = {
 /** Credit-side transaction types render green in amount cells. */
 export const CREDIT_TYPES: DbTxType[] = ["deposit", "win", "bonus", "rollback"];
 
+/**
+ * `useTranslations` works in both Server and Client Components, so these badges
+ * stay usable from the async list pages and from the realtime support inbox.
+ */
 export function StatusBadge({ status }: { status: AccountStatus }) {
-  return <Badge variant={ACCOUNT_STATUS[status]}>{humanize(status)}</Badge>;
+  const t = useTranslations("admin.common");
+  return <Badge variant={ACCOUNT_STATUS[status]}>{t(`status.${status}`)}</Badge>;
 }
 
 export function KycBadge({ status }: { status: KycStatus }) {
-  return <Badge variant={KYC[status]}>KYC {status}</Badge>;
+  const t = useTranslations("admin.common");
+  return <Badge variant={KYC[status]}>{t(`kycBadge.${status}`)}</Badge>;
 }
 
 export function RoleBadge({ role }: { role: UserRole }) {
-  return <Badge variant={ROLE[role]}>{role}</Badge>;
+  const t = useTranslations("admin.common");
+  return <Badge variant={ROLE[role]}>{t(`role.${role}`)}</Badge>;
 }
 
 export function TxStatusBadge({ status }: { status: DbTxStatus }) {
-  return <Badge variant={TX_STATUS[status]}>{status}</Badge>;
+  const t = useTranslations("admin.common");
+  return <Badge variant={TX_STATUS[status]}>{t(`txStatus.${status}`)}</Badge>;
 }
 
 export function BetStatusBadge({ status }: { status: DbBetStatus }) {
-  return <Badge variant={BET_STATUS[status]}>{humanize(status)}</Badge>;
+  const t = useTranslations("admin.common");
+  return <Badge variant={BET_STATUS[status]}>{t(`betStatus.${status}`)}</Badge>;
 }
 
 export function TicketStatusBadge({ status }: { status: TicketStatus }) {
-  return <Badge variant={TICKET_STATUS[status]}>{status}</Badge>;
+  const t = useTranslations("admin.common");
+  return <Badge variant={TICKET_STATUS[status]}>{t(`ticketStatus.${status}`)}</Badge>;
 }
 
 export function TicketPriorityBadge({ priority }: { priority: TicketPriority }) {
-  return <Badge variant={TICKET_PRIORITY[priority]}>{priority}</Badge>;
+  const t = useTranslations("admin.common");
+  return <Badge variant={TICKET_PRIORITY[priority]}>{t(`ticketPriority.${priority}`)}</Badge>;
 }

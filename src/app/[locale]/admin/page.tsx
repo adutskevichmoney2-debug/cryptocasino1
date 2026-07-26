@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -33,6 +33,10 @@ export default async function AdminDashboardPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
+
+  const t = await getTranslations("admin.dashboard");
+  const tc = await getTranslations("admin.common");
+  const ago = (value?: string | null) => fmtAgo(value, (unit, n) => tc(`ago.${unit}`, { n }));
 
   const profile = await requireStaff();
   if (!profile) return null;
@@ -69,55 +73,68 @@ export default async function AdminDashboardPage({
   return (
     <>
       <AdminPageHeader
-        title="Dashboard"
-        description={`Signed in as ${profile.nickname} (${profile.role}). Figures are live from Supabase; times are UTC.`}
+        title={t("title")}
+        description={t("description", {
+          nickname: profile.nickname,
+          role: tc(`role.${profile.role}`),
+        })}
       />
 
       {!stats ? (
         <p className="mb-6 rounded-xl border border-dashed border-line-strong px-4 py-6 text-center text-[13px] text-content-tertiary">
-          Dashboard statistics are unavailable — {statsResult.error?.message ?? "no data returned"}.
+          {t("statsUnavailable", { reason: statsResult.error?.message ?? t("noData") })}
         </p>
       ) : (
         <div className="mb-7 grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-4">
-          <StatTile label="Players" value={int(stats.players)} icon={Users} href="/admin/players" />
           <StatTile
-            label="New today"
+            label={t("players")}
+            value={int(stats.players)}
+            icon={Users}
+            href="/admin/players"
+          />
+          <StatTile
+            label={t("newToday")}
             value={int(stats.playersToday)}
             icon={UserPlus}
             tone="accent"
           />
           <StatTile
-            label="Online now"
+            label={t("onlineNow")}
             value={int(stats.online)}
             icon={Radio}
-            hint="Seen in the last 5 min"
+            hint={t("onlineHint")}
             tone="success"
           />
           <StatTile
-            label="Pending transactions"
+            label={t("pendingTx")}
             value={int(stats.pendingTx)}
             icon={Timer}
             tone={num(stats.pendingTx) > 0 ? "warning" : "neutral"}
             href="/admin/transactions?status=pending"
           />
           <StatTile
-            label="Open tickets"
+            label={t("openTickets")}
             value={int(stats.openTickets)}
             icon={LifeBuoy}
             tone={num(stats.openTickets) > 0 ? "warning" : "neutral"}
             href="/admin/support"
           />
-          <StatTile label="Bets today" value={int(stats.betsToday)} icon={Dice5} href="/admin/bets" />
           <StatTile
-            label="Wagered today"
+            label={t("betsToday")}
+            value={int(stats.betsToday)}
+            icon={Dice5}
+            href="/admin/bets"
+          />
+          <StatTile
+            label={t("wageredToday")}
             value={fmtUsdt(num(stats.wageredToday))}
-            hint="Sum of stakes"
+            hint={t("wageredHint")}
             icon={Coins}
           />
           <StatTile
-            label="Deposits / withdrawals today"
+            label={t("depositsWithdrawals")}
             value={`${fmtUsdt(num(stats.depositsToday))} / ${fmtUsdt(num(stats.withdrawalsToday))}`}
-            hint="Confirmed only"
+            hint={t("depositsHint")}
             icon={num(stats.depositsToday) >= num(stats.withdrawalsToday) ? ArrowDownToLine : ArrowUpFromLine}
           />
         </div>
@@ -125,14 +142,14 @@ export default async function AdminDashboardPage({
 
       <div className="grid min-w-0 gap-6 xl:grid-cols-2">
         <Section
-          title="Pending transactions"
-          description="Latest 10 awaiting review"
+          title={t("pendingTitle")}
+          description={t("pendingDescription")}
           action={
             <Link
               href="/admin/transactions?status=pending"
               className="text-[13px] font-semibold text-accent hover:underline"
             >
-              View all
+              {tc("viewAll")}
             </Link>
           }
         >
@@ -140,16 +157,16 @@ export default async function AdminDashboardPage({
             <Table minWidth="min-w-[560px]">
               <thead>
                 <tr>
-                  <Th>Player</Th>
-                  <Th>Type</Th>
-                  <Th className="text-right">Amount</Th>
-                  <Th>Status</Th>
-                  <Th>Created</Th>
+                  <Th>{tc("columns.player")}</Th>
+                  <Th>{tc("columns.type")}</Th>
+                  <Th className="text-right">{tc("columns.amount")}</Th>
+                  <Th>{tc("columns.status")}</Th>
+                  <Th>{tc("columns.created")}</Th>
                 </tr>
               </thead>
               <tbody>
                 {pending.length === 0 ? (
-                  <EmptyRow colSpan={5} label="Nothing waiting for review" />
+                  <EmptyRow colSpan={5} label={t("pendingEmpty")} />
                 ) : (
                   pending.map((tx) => {
                     const player = profiles.get(tx.user_id);
@@ -160,7 +177,7 @@ export default async function AdminDashboardPage({
                             {player?.nickname ?? DASH}
                           </RowLink>
                         </Td>
-                        <Td className="capitalize">{tx.type}</Td>
+                        <Td>{tc(`txType.${tx.type}`)}</Td>
                         <Td className="text-right font-semibold tabular-nums text-content">
                           {fmtAmount(tx.amount)} {tx.coin}
                           <span className="ml-1.5 text-[11px] font-normal text-content-tertiary">
@@ -181,14 +198,14 @@ export default async function AdminDashboardPage({
         </Section>
 
         <Section
-          title="Open tickets"
-          description="Latest 10 by activity"
+          title={t("ticketsTitle")}
+          description={t("ticketsDescription")}
           action={
             <Link
               href="/admin/support"
               className="text-[13px] font-semibold text-accent hover:underline"
             >
-              View inbox
+              {t("viewInbox")}
             </Link>
           }
         >
@@ -196,16 +213,16 @@ export default async function AdminDashboardPage({
             <Table minWidth="min-w-[560px]">
               <thead>
                 <tr>
-                  <Th>Player</Th>
-                  <Th>Subject</Th>
-                  <Th>Status</Th>
-                  <Th>Priority</Th>
-                  <Th>Updated</Th>
+                  <Th>{tc("columns.player")}</Th>
+                  <Th>{tc("columns.subject")}</Th>
+                  <Th>{tc("columns.status")}</Th>
+                  <Th>{tc("columns.priority")}</Th>
+                  <Th>{tc("columns.updated")}</Th>
                 </tr>
               </thead>
               <tbody>
                 {tickets.length === 0 ? (
-                  <EmptyRow colSpan={5} label="The inbox is empty" />
+                  <EmptyRow colSpan={5} label={t("ticketsEmpty")} />
                 ) : (
                   tickets.map((ticket) => {
                     const player = profiles.get(ticket.user_id);
@@ -221,7 +238,7 @@ export default async function AdminDashboardPage({
                         <Td>
                           <TicketPriorityBadge priority={ticket.priority} />
                         </Td>
-                        <Td className="text-content-tertiary">{fmtAgo(ticket.updated_at)}</Td>
+                        <Td className="text-content-tertiary">{ago(ticket.updated_at)}</Td>
                       </Tr>
                     );
                   })

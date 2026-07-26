@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Ticket } from "lucide-react";
 import type { Locale } from "@/i18n/routing";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
@@ -17,15 +17,19 @@ import { PAGE_SIZE, pageFrom, param, rangeFor, type RawSearchParams } from "@/co
 const BASE_PATH = "/admin/bets";
 const STATUSES: DbBetStatus[] = ["open", "won", "lost", "void", "cashed_out"];
 
-/** First selection label, used as a readable summary of the slip. */
-function selectionSummary(selections: unknown): string {
+/**
+ * First selection label, used as a readable summary of the slip. The stored
+ * labels come from the sportsbook feed and stay as-is; only the placeholder for
+ * an unlabelled selection is translated.
+ */
+function selectionSummary(selections: unknown, fallback: string): string {
   if (!Array.isArray(selections) || selections.length === 0) return DASH;
   const first = selections[0] as Record<string, unknown> | null;
   const label =
     first && typeof first === "object"
       ? (first.eventLabel ?? first.label ?? first.marketLabel)
       : null;
-  const text = typeof label === "string" && label ? label : "Selection";
+  const text = typeof label === "string" && label ? label : fallback;
   return selections.length > 1 ? `${text} +${selections.length - 1}` : text;
 }
 
@@ -38,6 +42,9 @@ export default async function AdminBetsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
+
+  const t = await getTranslations("admin.bets");
+  const tc = await getTranslations("admin.common");
 
   const viewer = await requireStaff();
   if (!viewer) return null;
@@ -68,7 +75,7 @@ export default async function AdminBetsPage({
 
   return (
     <>
-      <AdminPageHeader title="Bets" description="Every sports bet placed on the platform." />
+      <AdminPageHeader title={t("title")} description={t("description")} />
 
       <AdminFilters
         basePath={BASE_PATH}
@@ -76,38 +83,38 @@ export default async function AdminBetsPage({
         selects={[
           {
             name: "status",
-            label: "Status",
+            label: tc("columns.status"),
             options: [
-              { value: "", label: "All statuses" },
-              ...STATUSES.map((v) => ({ value: v, label: v })),
+              { value: "", label: tc("allStatuses") },
+              ...STATUSES.map((v) => ({ value: v, label: tc(`betStatus.${v}`) })),
             ],
           },
         ]}
       />
 
       {error ? (
-        <EmptyState icon={Ticket} title="Could not load bets" description={error.message} />
+        <EmptyState icon={Ticket} title={t("loadError")} description={error.message} />
       ) : (
         <>
           <TableScroller>
             <Table minWidth="min-w-[940px]">
               <thead>
                 <tr>
-                  <Th>Bet</Th>
-                  <Th>Player</Th>
-                  <Th>Slip</Th>
-                  <Th>Type</Th>
-                  <Th className="text-right">Stake</Th>
-                  <Th className="text-right">Odds</Th>
-                  <Th className="text-right">Potential win</Th>
-                  <Th className="text-right">Payout</Th>
-                  <Th>Status</Th>
-                  <Th>Placed</Th>
+                  <Th>{tc("columns.bet")}</Th>
+                  <Th>{tc("columns.player")}</Th>
+                  <Th>{tc("columns.slip")}</Th>
+                  <Th>{tc("columns.type")}</Th>
+                  <Th className="text-right">{tc("columns.stake")}</Th>
+                  <Th className="text-right">{tc("columns.odds")}</Th>
+                  <Th className="text-right">{tc("columns.potentialWin")}</Th>
+                  <Th className="text-right">{tc("columns.payout")}</Th>
+                  <Th>{tc("columns.status")}</Th>
+                  <Th>{tc("columns.placed")}</Th>
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 ? (
-                  <EmptyRow colSpan={10} label="No bets match this filter" />
+                  <EmptyRow colSpan={10} label={t("empty")} />
                 ) : (
                   rows.map((bet) => {
                     const player = profiles.get(bet.user_id);
@@ -120,9 +127,9 @@ export default async function AdminBetsPage({
                           </RowLink>
                         </Td>
                         <Td className="max-w-[220px] truncate">
-                          {selectionSummary(bet.selections)}
+                          {selectionSummary(bet.selections, t("selection"))}
                         </Td>
-                        <Td className="capitalize">{bet.bet_type}</Td>
+                        <Td>{tc(`betType.${bet.bet_type}`)}</Td>
                         <Td className="text-right font-semibold tabular-nums text-content">
                           {fmtAmount(bet.stake)} {bet.coin}
                         </Td>

@@ -311,6 +311,10 @@ export type Database = {
         Returns: ProfileRow;
       };
       admin_set_role: { Args: { p_user_id: string; p_role: UserRole }; Returns: ProfileRow };
+      admin_set_player_id: {
+        Args: { p_user_id: string; p_player_id: number };
+        Returns: ProfileRow;
+      };
       admin_add_note: { Args: { p_user_id: string; p_note: string }; Returns: ProfileRow };
       admin_dashboard_stats: { Args: Record<string, never>; Returns: AdminDashboardStats };
       is_staff: { Args: Record<string, never>; Returns: boolean };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Check, X } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
@@ -8,7 +9,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useUiStore } from "@/stores/uiStore";
 import type { DbCoin, DbTxType } from "@/lib/supabase/types";
 import { ActionModal, NoteField } from "./ActionModal";
-import { errorText } from "./errors";
+import { useErrorText } from "./errors";
 import { fmtAmount } from "./format";
 
 /**
@@ -31,13 +32,16 @@ export function TxReview({
   player: string;
   canReview: boolean;
 }) {
+  const t = useTranslations("admin.transactions");
+  const tc = useTranslations("admin.common");
+  const errorText = useErrorText();
   const router = useRouter();
   const pushToast = useUiStore((s) => s.pushToast);
   const [dialog, setDialog] = useState<"approve" | "reject" | null>(null);
   const [note, setNote] = useState("");
 
   if (!canReview) {
-    return <span className="text-xs text-content-tertiary">Admin only</span>;
+    return <span className="text-xs text-content-tertiary">{tc("adminOnly")}</span>;
   }
 
   const submit = async (approve: boolean) => {
@@ -48,7 +52,7 @@ export function TxReview({
         p_note: note.trim() || null,
       });
       if (error) throw error;
-      pushToast("success", approve ? "Transaction approved." : "Transaction rejected.");
+      pushToast("success", approve ? t("approved") : t("rejected"));
       setDialog(null);
       setNote("");
       router.refresh();
@@ -58,62 +62,70 @@ export function TxReview({
   };
 
   const amountLabel = `${fmtAmount(amount)} ${coin}`;
+  const typeLabel = tc(`txType.${type}`);
+  const strong = (chunks: React.ReactNode) => <strong className="text-content">{chunks}</strong>;
 
   return (
     <div className="flex items-center gap-1.5">
       <Button size="xs" variant="soft" onClick={() => setDialog("approve")}>
         <Check className="size-3.5" />
-        Approve
+        {t("approve")}
       </Button>
       <Button size="xs" variant="danger-soft" onClick={() => setDialog("reject")}>
         <X className="size-3.5" />
-        Reject
+        {t("reject")}
       </Button>
 
       <ActionModal
         open={dialog === "approve"}
         onClose={() => setDialog(null)}
-        title="Approve transaction"
-        submitLabel="Approve"
+        title={t("approveTitle")}
+        submitLabel={t("approve")}
         summary={
           <>
-            Approve the {type} of <strong className="text-content">{amountLabel}</strong> for{" "}
-            <strong className="text-content">{player}</strong>.
-            {type === "deposit"
-              ? " The amount is credited to the player's balance immediately."
-              : " The funds were already reserved when the request was made."}
+            {t.rich("approveSummary", {
+              type: typeLabel,
+              amount: amountLabel,
+              player,
+              b: strong,
+            })}{" "}
+            {type === "deposit" ? t("approveDepositHint") : t("approveWithdrawHint")}
           </>
         }
         onSubmit={() => submit(true)}
       >
         <NoteField
-          label="Note (optional)"
+          label={t("reviewNote")}
           value={note}
           onValueChange={setNote}
-          placeholder="Visible on the transaction record"
+          placeholder={t("reviewNotePlaceholder")}
         />
       </ActionModal>
 
       <ActionModal
         open={dialog === "reject"}
         onClose={() => setDialog(null)}
-        title="Reject transaction"
-        submitLabel="Reject"
+        title={t("rejectTitle")}
+        submitLabel={t("reject")}
         danger
         summary={
           <>
-            Reject the {type} of <strong className="text-content">{amountLabel}</strong> for{" "}
-            <strong className="text-content">{player}</strong>.
-            {type === "withdraw" && " The reserved funds are returned to the player's balance."}
+            {t.rich("rejectSummary", {
+              type: typeLabel,
+              amount: amountLabel,
+              player,
+              b: strong,
+            })}
+            {type === "withdraw" && ` ${t("rejectWithdrawHint")}`}
           </>
         }
         onSubmit={() => submit(false)}
       >
         <NoteField
-          label="Reason (optional)"
+          label={t("reviewReason")}
           value={note}
           onValueChange={setNote}
-          placeholder="Stored on the transaction and in the audit log"
+          placeholder={t("reviewReasonPlaceholder")}
         />
       </ActionModal>
     </div>

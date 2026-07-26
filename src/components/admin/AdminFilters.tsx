@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { RotateCcw } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { SearchInput } from "@/components/ui/SearchInput";
@@ -23,15 +24,17 @@ export function AdminFilters({
   basePath,
   values,
   searchName,
-  searchPlaceholder = "Search",
+  searchPlaceholder,
   selects = [],
 }: {
   basePath: string;
   values: Record<string, string>;
   searchName?: string;
+  /** Already translated by the calling page; falls back to a generic label. */
   searchPlaceholder?: string;
   selects?: FilterSelectSpec[];
 }) {
+  const t = useTranslations("admin.common");
   const router = useRouter();
   const initialSearch = searchName ? (values[searchName] ?? "") : "";
   const [search, setSearch] = useState(initialSearch);
@@ -49,6 +52,7 @@ export function AdminFilters({
   };
 
   const dirty = Object.entries(values).some(([key, value]) => key !== "page" && value);
+  const placeholder = searchPlaceholder ?? t("search");
 
   return (
     <div className="mb-4 flex flex-wrap items-end gap-2.5">
@@ -56,9 +60,9 @@ export function AdminFilters({
         <SearchInput
           value={search}
           onValueChange={setSearch}
-          placeholder={searchPlaceholder}
+          placeholder={placeholder}
           className="w-full min-w-[200px] sm:w-72"
-          aria-label={searchPlaceholder}
+          aria-label={placeholder}
         />
       )}
 
@@ -84,7 +88,7 @@ export function AdminFilters({
           }}
         >
           <RotateCcw className="size-4" />
-          Reset
+          {t("reset")}
         </Button>
       )}
     </div>

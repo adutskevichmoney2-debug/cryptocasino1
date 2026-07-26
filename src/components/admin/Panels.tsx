@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -116,6 +117,7 @@ export function Field({ label, children }: { label: string; children: React.Reac
 }
 
 export function SupabaseNotConfigured() {
+  const t = useTranslations("admin.common");
   return (
     <Card className="mx-auto mt-10 max-w-[560px] p-6">
       <div className="flex items-start gap-3">
@@ -124,22 +126,16 @@ export function SupabaseNotConfigured() {
         </span>
         <div className="min-w-0">
           <h1 className="font-display text-base font-bold text-content">
-            Supabase is not configured
+            {t("notConfiguredTitle")}
           </h1>
           <p className="mt-1.5 text-[13px] leading-relaxed text-content-secondary">
-            The operator panel reads live data straight from Supabase. Set{" "}
-            <code className="rounded bg-surface-3 px-1 py-0.5 font-mono text-xs text-content">
-              NEXT_PUBLIC_SUPABASE_URL
-            </code>{" "}
-            and{" "}
-            <code className="rounded bg-surface-3 px-1 py-0.5 font-mono text-xs text-content">
-              NEXT_PUBLIC_SUPABASE_ANON_KEY
-            </code>{" "}
-            in your environment, run the migrations in{" "}
-            <code className="rounded bg-surface-3 px-1 py-0.5 font-mono text-xs text-content">
-              supabase/migrations
-            </code>
-            , then reload this page.
+            {t.rich("notConfiguredBody", {
+              code: (chunks) => (
+                <code className="rounded bg-surface-3 px-1 py-0.5 font-mono text-xs text-content">
+                  {chunks}
+                </code>
+              ),
+            })}
           </p>
         </div>
       </div>
