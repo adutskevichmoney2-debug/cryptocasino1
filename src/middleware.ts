@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { createServerClient } from "@supabase/ssr";
 import { routing } from "./i18n/routing";
@@ -38,7 +38,3 @@ export const config = {
   // Match all paths except api routes, Next internals and files with extensions
   matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
 };
-
-export const runtime = "nodejs";
-
-export type { NextResponse };
