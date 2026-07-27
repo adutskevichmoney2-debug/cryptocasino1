@@ -271,6 +271,8 @@ export type Database = {
         Returns: BetRow;
       };
       settle_bet: { Args: { p_bet_id: string; p_won: boolean }; Returns: BetRow };
+      /** Settles the caller's own due bets; the outcome is decided in SQL. */
+      settle_due_bets: { Args: Record<string, never>; Returns: number };
       record_game_round: {
         Args: {
           p_game_slug: string;

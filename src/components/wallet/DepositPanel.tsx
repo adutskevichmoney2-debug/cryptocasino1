@@ -8,6 +8,7 @@ import { services } from "@/services";
 import { useAsync } from "@/hooks/useAsync";
 import { useWalletStore } from "@/stores/walletStore";
 import { useUiStore } from "@/stores/uiStore";
+import { useServiceError } from "@/hooks/useServiceError";
 import { CoinSelect } from "./CoinSelect";
 import { NetworkSelect } from "./NetworkSelect";
 import { CopyField } from "@/components/ui/CopyField";
@@ -22,6 +23,7 @@ import type { Coin, CoinMeta, Network } from "@/services/types";
 export function DepositPanel({ coins }: { coins: CoinMeta[] }) {
   const t = useTranslations("wallet");
   const tCommon = useTranslations("common");
+  const translateError = useServiceError();
   const pushToast = useUiStore((s) => s.pushToast);
   const activeCoin = useWalletStore((s) => s.activeCoin);
   const setActiveCoin = useWalletStore((s) => s.setActiveCoin);
@@ -47,7 +49,9 @@ export function DepositPanel({ coins }: { coins: CoinMeta[] }) {
     const result = await services.wallet.simulateDeposit(coin, amount);
     setCrediting(false);
     if (!result.ok) {
-      pushToast("error", t("demoCredited", { amount: 0, coin }));
+      // The RPC rejects with demo_limit_reached / invalid_amount / account_* —
+      // show the real reason instead of a success-shaped "credited 0" message.
+      pushToast("error", translateError(result.error));
       return;
     }
     setActiveCoin(coin);

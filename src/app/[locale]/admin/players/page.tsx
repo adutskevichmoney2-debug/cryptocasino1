@@ -53,9 +53,17 @@ export default async function AdminPlayersPage({
   if (status) query = query.eq("status", status as AccountStatus);
   if (role) query = query.eq("role", role as UserRole);
   if (q) {
-    // A pure number is a public player id; anything else matches nickname/email.
-    if (/^\d+$/.test(q)) query = query.eq("player_id", Number(q));
-    else query = query.or(`nickname.ilike.%${q}%,email.ilike.%${q}%`);
+    // A pure number (within bigint/player-id range) is a public player id;
+    // anything else matches nickname/email.
+    if (/^\d{1,12}$/.test(q)) {
+      query = query.eq("player_id", Number(q));
+    } else {
+      // PostgREST parses `or=(...)` as a comma-separated list, so an unquoted
+      // term containing , ( ) or . produces a 400 and blanks the whole page.
+      // Double-quoting the value makes it opaque; only " and \ need escaping.
+      const safe = q.replace(/["\\]/g, "\\$&");
+      query = query.or(`nickname.ilike."%${safe}%",email.ilike."%${safe}%"`);
+    }
   }
 
   const { data, count, error } = await query;

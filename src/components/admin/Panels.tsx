@@ -52,14 +52,21 @@ export function StatTile({
   }[tone];
 
   const body = (
-    <Card className="flex h-full flex-col gap-1 p-3.5">
-      <div className="flex items-center gap-2">
+    // min-w-0 + break-words: a six-figure money figure must wrap inside the tile
+    // instead of widening its grid column and scrolling the page at 360px.
+    <Card className="flex h-full min-w-0 flex-col gap-1 p-3.5">
+      <div className="flex min-w-0 items-center gap-2">
         {Icon && <Icon className="size-3.5 shrink-0 text-content-tertiary" />}
         <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-content-tertiary">
           {label}
         </p>
       </div>
-      <p className={cn("font-display text-xl font-extrabold tabular-nums sm:text-2xl", toneClass)}>
+      <p
+        className={cn(
+          "break-words font-display text-xl font-extrabold tabular-nums sm:text-2xl",
+          toneClass,
+        )}
+      >
         {value}
       </p>
       {hint && <p className="truncate text-[11px] text-content-tertiary">{hint}</p>}
@@ -68,7 +75,7 @@ export function StatTile({
 
   if (!href) return body;
   return (
-    <Link href={href} className="block transition-opacity duration-120 hover:opacity-85">
+    <Link href={href} className="block min-w-0 transition-opacity duration-120 hover:opacity-85">
       {body}
     </Link>
   );

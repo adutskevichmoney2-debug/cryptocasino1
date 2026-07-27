@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { GameCard } from "./GameCard";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -9,6 +10,7 @@ import type { Game } from "@/services/types";
 
 /** Horizontally scrollable game strip with arrow controls, Stake-lobby style. */
 export function GameRow({ games, loading }: { games: Game[]; loading?: boolean }) {
+  const t = useTranslations("common");
   const scroller = useRef<HTMLDivElement>(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(true);
@@ -55,7 +57,7 @@ export function GameRow({ games, loading }: { games: Game[]; loading?: boolean }
 
       {canLeft && (
         <IconButton
-          label="Scroll left"
+          label={t("scrollLeft")}
           variant="soft"
           onClick={() => scrollBy(-1)}
           className="absolute -left-3 top-1/2 z-10 -translate-y-1/2 border border-line shadow-dropdown max-lg:hidden"
@@ -65,7 +67,7 @@ export function GameRow({ games, loading }: { games: Game[]; loading?: boolean }
       )}
       {canRight && games.length > 4 && (
         <IconButton
-          label="Scroll right"
+          label={t("scrollRight")}
           variant="soft"
           onClick={() => scrollBy(1)}
           className="absolute -right-3 top-1/2 z-10 -translate-y-1/2 border border-line shadow-dropdown max-lg:hidden"

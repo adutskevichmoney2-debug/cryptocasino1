@@ -2,6 +2,7 @@
 
 import { createPortal } from "react-dom";
 import { AnimatePresence, m } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { CheckCircle2, XCircle, Info, AlertTriangle, X } from "lucide-react";
 import { useUiStore, type ToastType } from "@/stores/uiStore";
 import { useMounted } from "@/hooks/useMounted";
@@ -23,6 +24,7 @@ const COLORS: Record<ToastType, string> = {
 };
 
 export function ToastHub() {
+  const tCommon = useTranslations("common");
   const toasts = useUiStore((s) => s.toasts);
   const dismiss = useUiStore((s) => s.dismissToast);
   const mounted = useMounted();
@@ -53,7 +55,7 @@ export function ToastHub() {
               <button
                 type="button"
                 onClick={() => dismiss(t.id)}
-                aria-label="Dismiss"
+                aria-label={tCommon("dismiss")}
                 className="shrink-0 cursor-pointer text-content-tertiary transition-colors duration-120 hover:text-content"
               >
                 <X className="size-4" />

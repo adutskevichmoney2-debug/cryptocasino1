@@ -144,7 +144,7 @@ export default async function AdminPlayerDetailPage({
           <h1 className="font-display text-xl font-extrabold text-content sm:text-2xl">
             {player.nickname}
           </h1>
-          <p className="text-[13px] text-content-tertiary">
+          <p className="break-all text-[13px] text-content-tertiary">
             #{player.player_id} · {player.email}
           </p>
         </div>

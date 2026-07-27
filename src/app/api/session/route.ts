@@ -13,7 +13,9 @@ import { clientIpFromHeaders, parseUserAgent } from "@/lib/userAgent";
  */
 export async function POST() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    return NextResponse.json({ ok: false, reason: "not-configured" }, { status: 204 });
+    // 204 is a null-body status: attaching a JSON body makes the Response
+    // constructor throw and turns this branch into a 500.
+    return new NextResponse(null, { status: 204 });
   }
 
   const supabase = await getSupabaseServerClient();

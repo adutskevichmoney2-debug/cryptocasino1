@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { services } from "@/services";
 import { useAsync } from "@/hooks/useAsync";
@@ -61,12 +62,15 @@ function ActiveBonuses({ reloadKey }: { reloadKey: number }) {
 }
 
 export function PromotionsView() {
-  const { data: promotions, loading, reload } = useAsync(() => services.bonus.getPromotions(), []);
+  const { data: promotions, loading } = useAsync(() => services.bonus.getPromotions(), []);
+  // Promotions themselves are static fixtures; claiming a code only changes the
+  // player's active bonuses, so that is what has to refetch.
+  const [claimCount, setClaimCount] = useState(0);
 
   return (
     <div className="flex flex-col gap-6">
-      <PromoCodeInput onClaimed={() => void reload()} />
-      <ActiveBonuses reloadKey={promotions ? 1 : 0} />
+      <PromoCodeInput onClaimed={() => setClaimCount((n) => n + 1)} />
+      <ActiveBonuses reloadKey={claimCount} />
 
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

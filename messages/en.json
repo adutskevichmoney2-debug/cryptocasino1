@@ -10,6 +10,9 @@
     "save": "Save",
     "saved": "Changes saved",
     "close": "Close",
+    "dismiss": "Dismiss",
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right",
     "copy": "Copy",
     "copied": "Copied!",
     "search": "Search",
@@ -203,7 +206,17 @@
       "betWon": "Your bet won! {amount} {coin} credited",
       "betLost": "Your bet on {event} was settled as lost",
       "bonusClaimed": "Bonus {code} activated",
-      "welcome": "Welcome to CryptoCasino! Claim your welcome bonus in Promotions."
+      "welcome": "Welcome to CryptoCasino! Claim your welcome bonus in Promotions.",
+      "withdrawSubmitted": "Withdrawal of {amount} {coin} submitted for review",
+      "depositConfirmed": "Deposit of {amount} {coin} has been confirmed",
+      "transactionRejected": "Transaction of {amount} {coin} was rejected",
+      "bonusCredited": "Bonus of {amount} {coin} has been credited",
+      "balanceCredited": "{amount} {coin} was credited to your balance",
+      "balanceDebited": "{amount} {coin} was debited from your balance",
+      "kycPending": "Your verification documents are under review",
+      "kycVerified": "Your account has been verified",
+      "kycRejected": "Your verification was rejected — please submit new documents",
+      "kycNone": "Your verification status has been reset"
     }
   },
   "casino": {

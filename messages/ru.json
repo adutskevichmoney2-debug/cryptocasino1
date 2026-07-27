@@ -10,6 +10,9 @@
     "save": "Сохранить",
     "saved": "Изменения сохранены",
     "close": "Закрыть",
+    "dismiss": "Скрыть",
+    "scrollLeft": "Прокрутить влево",
+    "scrollRight": "Прокрутить вправо",
     "copy": "Копировать",
     "copied": "Скопировано!",
     "search": "Поиск",
@@ -203,7 +206,17 @@
       "betWon": "Ваша ставка выиграла! Зачислено {amount} {coin}",
       "betLost": "Ваша ставка на {event} рассчитана как проигрышная",
       "bonusClaimed": "Бонус {code} активирован",
-      "welcome": "Добро пожаловать в CryptoCasino! Заберите приветственный бонус в разделе «Бонусы»."
+      "welcome": "Добро пожаловать в CryptoCasino! Заберите приветственный бонус в разделе «Бонусы».",
+      "withdrawSubmitted": "Заявка на вывод {amount} {coin} отправлена на проверку",
+      "depositConfirmed": "Депозит {amount} {coin} подтверждён",
+      "transactionRejected": "Операция на {amount} {coin} отклонена",
+      "bonusCredited": "Бонус {amount} {coin} зачислен",
+      "balanceCredited": "{amount} {coin} зачислено на ваш баланс",
+      "balanceDebited": "{amount} {coin} списано с вашего баланса",
+      "kycPending": "Ваши документы на проверке",
+      "kycVerified": "Ваш аккаунт верифицирован",
+      "kycRejected": "Верификация отклонена — пожалуйста, загрузите новые документы",
+      "kycNone": "Статус верификации сброшен"
     }
   },
   "casino": {

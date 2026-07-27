@@ -48,7 +48,15 @@ export function AdminFilters({
   }, [debounced, searchName, basePath, router, values]);
 
   const go = (name: string, value: string) => {
-    router.replace(hrefWith(basePath, { ...values, [name]: value, page: 1 }));
+    const next: Record<string, string | number> = { ...values, [name]: value, page: 1 };
+    // Carry the typed search along: without this, changing a select inside the
+    // debounce window navigates with the stale URL value and silently drops
+    // whatever the operator just typed (the box keeps showing it).
+    if (searchName) {
+      next[searchName] = search;
+      applied.current = search;
+    }
+    router.replace(hrefWith(basePath, next));
   };
 
   const dirty = Object.entries(values).some(([key, value]) => key !== "page" && value);

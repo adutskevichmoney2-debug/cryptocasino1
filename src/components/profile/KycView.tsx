@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { AlertTriangle, BadgeCheck, Check, FileUp, Hourglass } from "lucide-react";
 import { services } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
+import { useUiStore } from "@/stores/uiStore";
+import { useServiceError } from "@/hooks/useServiceError";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -51,6 +53,8 @@ function Stepper({ current, labels }: { current: number; labels: string[] }) {
 
 export function KycView() {
   const t = useTranslations("profile.kyc");
+  const translateError = useServiceError();
+  const pushToast = useUiStore((s) => s.pushToast);
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
 
@@ -103,7 +107,12 @@ export function KycView() {
     setSubmitting(true);
     const result = await services.auth.updateProfile({ kycStatus: "pending" });
     setSubmitting(false);
-    if (result.ok) setUser(result.data);
+    if (!result.ok) {
+      // kyc_status is staff-only under RLS; without this the button looks dead.
+      pushToast("error", translateError(result.error));
+      return;
+    }
+    setUser(result.data);
   };
 
   const step1Valid = firstName.trim() && lastName.trim() && dob && country.trim();

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, m } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { useMounted } from "@/hooks/useMounted";
 import { useBodyLock } from "@/hooks/useBodyLock";
@@ -37,6 +38,7 @@ export function Modal({
   headerExtra,
   noPadding,
 }: ModalProps) {
+  const t = useTranslations("common");
   const mounted = useMounted();
   const panelRef = useRef<HTMLDivElement>(null);
   useBodyLock(open);
@@ -112,7 +114,7 @@ export function Modal({
               <h2 className="font-display text-base font-bold text-content">{title}</h2>
               <div className="flex items-center gap-1">
                 {headerExtra}
-                <IconButton label="Close" size="sm" onClick={onClose}>
+                <IconButton label={t("close")} size="sm" onClick={onClose}>
                   <X />
                 </IconButton>
               </div>

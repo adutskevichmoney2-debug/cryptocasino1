@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Info } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
@@ -21,6 +21,12 @@ export function AuthModal({
 }) {
   const t = useTranslations("auth");
   const [tab, setTab] = useState<"login" | "register">(initialTab);
+
+  // ModalRoot keeps this component mounted across open/close, so the tab has to
+  // follow initialTab — otherwise "Register" reopens on whatever tab was last shown.
+  useEffect(() => {
+    if (open) setTab(initialTab);
+  }, [open, initialTab]);
 
   return (
     <Modal open={open} onClose={onClose} size="sm" title={t(tab === "login" ? "login" : "register")}>

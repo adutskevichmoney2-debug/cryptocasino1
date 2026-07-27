@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Mail } from "lucide-react";
 import { services } from "@/services";
 import { useUiStore } from "@/stores/uiStore";
+import { useServiceError } from "@/hooks/useServiceError";
 import { contactSchema, type ContactValues } from "@/lib/validation";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -18,6 +19,7 @@ const TOPICS = ["account", "payments", "bonuses", "technical", "other"] as const
 export function ContactForm() {
   const t = useTranslations("contact");
   const tv = useTranslations("validation");
+  const translateError = useServiceError();
   const pushToast = useUiStore((s) => s.pushToast);
 
   const {
@@ -32,10 +34,14 @@ export function ContactForm() {
 
   const onSubmit = async (values: ContactValues) => {
     const result = await services.support.submitContactForm(values);
-    if (result.ok) {
-      reset();
-      pushToast("success", t("sent"));
+    if (!result.ok) {
+      // A signed-out visitor always fails here (tickets are pinned to auth.uid()),
+      // so the button must never look like it did nothing.
+      pushToast("error", translateError(result.error));
+      return;
     }
+    reset();
+    pushToast("success", t("sent"));
   };
 
   return (

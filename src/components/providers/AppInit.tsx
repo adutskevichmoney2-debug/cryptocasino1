@@ -9,6 +9,7 @@ import { useNotificationsStore } from "@/stores/notificationsStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useCasinoStore } from "@/stores/casinoStore";
+import { useBetslipStore } from "@/stores/betslipStore";
 import { formatCrypto } from "@/lib/format";
 
 /**
@@ -27,6 +28,7 @@ export function AppInit() {
     void useUiStore.persist.rehydrate();
     void useWalletStore.persist.rehydrate();
     void useSettingsStore.persist.rehydrate();
+    void useBetslipStore.persist.rehydrate();
     void initAuth();
   }, [initAuth]);
 

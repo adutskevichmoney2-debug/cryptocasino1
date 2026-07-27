@@ -1,14 +1,6 @@
 import type { Bet, BetSelection, BetStatus, Paginated, Result, Sport, SportEventDetail, SportsService } from "../types";
 import { fail, ok } from "../types";
-import {
-  betWins,
-  createOddsDrift,
-  findEvent,
-  isDueForSettlement,
-  listEvents,
-  listSports,
-  SETTLE_AFTER_MS,
-} from "../shared/sports";
+import { createOddsDrift, findEvent, listEvents, listSports } from "../shared/sports";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { BetRow, DbBetStatus } from "@/lib/supabase/types";
 import { currentUserId } from "./auth.supabase";
@@ -22,9 +14,6 @@ const BET_STATUS_FROM_DB: Record<DbBetStatus, BetStatus> = {
   void: "void",
   cashed_out: "won",
 };
-
-/** Never settle more than this many bets in one getMyBets call. */
-const SETTLE_BATCH = 20;
 
 function toSelections(value: unknown): BetSelection[] {
   return Array.isArray(value) ? (value as BetSelection[]) : [];
@@ -50,25 +39,13 @@ export function createSportsService(): SportsService {
   const drift = createOddsDrift();
 
   /**
-   * There is no results feed, so the client ticks its own open bets over once
-   * they are old enough. settle_bet credits the win, writes the ledger row and
-   * pushes the notification; the outcome is derived from the bet id so a replay
-   * always agrees with the mock backend.
+   * There is no results feed, so open bets are ticked over on demand. The
+   * decision is made entirely in SQL: settle_due_bets takes no arguments, works
+   * only on the caller's own due bets, and derives each outcome from the bet id.
+   * The client cannot say whether a bet won — settle_bet itself is staff-only.
    */
-  const settleDueBets = async (uid: string): Promise<void> => {
-    const cutoff = new Date(Date.now() - SETTLE_AFTER_MS).toISOString();
-    const { data } = await supabase
-      .from("bets")
-      .select("id, created_at")
-      .eq("user_id", uid)
-      .eq("status", "open")
-      .lte("created_at", cutoff)
-      .limit(SETTLE_BATCH);
-
-    for (const row of data ?? []) {
-      if (!isDueForSettlement(row.created_at)) continue;
-      await supabase.rpc("settle_bet", { p_bet_id: row.id, p_won: betWins(row.id) });
-    }
+  const settleDueBets = async (): Promise<void> => {
+    await supabase.rpc("settle_due_bets");
   };
 
   return {
@@ -111,7 +88,7 @@ export function createSportsService(): SportsService {
       const uid = await currentUserId();
       if (!uid) return { items: [], total: 0, page, pageSize };
 
-      await settleDueBets(uid);
+      await settleDueBets();
 
       let query = supabase
         .from("bets")

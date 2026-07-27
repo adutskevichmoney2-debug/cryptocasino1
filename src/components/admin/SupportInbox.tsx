@@ -182,10 +182,14 @@ export function SupportInbox({
           status: patch.status,
           priority: patch.priority,
           assigned_to: patch.assigned_to,
+          // Undefined keys are dropped by the client, so an untouched field is
+          // left alone; reopening a ticket must actively clear closed_at.
           closed_at:
             patch.status === "closed" || patch.status === "resolved"
               ? new Date().toISOString()
-              : undefined,
+              : patch.status
+                ? null
+                : undefined,
         })
         .eq("id", selected.id);
       if (error) throw error;

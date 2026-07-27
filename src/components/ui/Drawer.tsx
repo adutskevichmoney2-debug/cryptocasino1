@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, m } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { useMounted } from "@/hooks/useMounted";
 import { useBodyLock } from "@/hooks/useBodyLock";
@@ -20,6 +21,7 @@ export interface DrawerProps {
 }
 
 export function Drawer({ open, onClose, side = "bottom", title, children, className }: DrawerProps) {
+  const t = useTranslations("common");
   const mounted = useMounted();
   useBodyLock(open);
 
@@ -71,7 +73,7 @@ export function Drawer({ open, onClose, side = "bottom", title, children, classN
             )}
             <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-3">
               <h2 className="font-display text-base font-bold text-content">{title}</h2>
-              <IconButton label="Close" size="sm" onClick={onClose}>
+              <IconButton label={t("close")} size="sm" onClick={onClose}>
                 <X />
               </IconButton>
             </div>
