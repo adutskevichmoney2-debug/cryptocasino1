@@ -14,8 +14,22 @@ local mock data layer. Everything below switches it onto a real database.
 
 ## 2. Apply the migrations
 
-Open **SQL Editor** in the Supabase dashboard and run the four files from
-`supabase/migrations/` **in order**, one at a time, waiting for each to succeed:
+Open **SQL Editor** in the Supabase dashboard and run the files from
+`supabase/migrations/` **in numeric order**, one at a time, waiting for each to
+succeed. Paste one file per query — a very large paste can be truncated by the
+editor, which leaves the schema half-applied without an obvious error.
+
+Alternatively, apply them over the Management API with a personal access token
+from <https://supabase.com/dashboard/account/tokens>:
+
+```bash
+curl -X POST "https://api.supabase.com/v1/projects/<project-ref>/database/query" \
+  -H "Authorization: Bearer $SUPABASE_PAT" \
+  -H "Content-Type: application/json" \
+  --data "$(jq -Rs '{query: .}' supabase/migrations/0001_schema.sql)"
+```
+
+The first four files are the base install:
 
 | Order | File | What it creates |
 |---|---|---|
@@ -23,6 +37,17 @@ Open **SQL Editor** in the Supabase dashboard and run the four files from
 | 2 | `0002_rls.sql` | Row level security policies, realtime publication |
 | 3 | `0003_functions.sql` | Money-moving RPC and operator actions |
 | 4 | `0004_seed.sql` | Promo codes, demo-funds helper |
+
+Then apply every remaining numbered file in order. In summary:
+
+| File | What it does |
+|---|---|
+| `0005_fix_extension_search_path.sql` | Signup trigger no longer depends on where pgcrypto is installed |
+| `0006_admin_player_id.sql` | Operators can assign a specific public player id |
+| `0007_server_side_odds.sql` | Odds catalogue; `place_bet` stops trusting client prices |
+| `0008_qa_admin_fixes.sql` | Audit fixes: staff-only settlement, tighter profile policy, deposit accounting |
+| `0009_server_side_settlement.sql` | `settle_due_bets` decides outcomes in SQL; no self-reported wins |
+| `0010_leaderboard_rates.sql` | Leaderboard and referral aggregates, `exchange_rates` table |
 
 If a statement fails, fix it before running the next file — later migrations
 depend on earlier ones.
