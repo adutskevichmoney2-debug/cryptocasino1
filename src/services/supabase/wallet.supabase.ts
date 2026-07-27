@@ -88,9 +88,21 @@ export function createWalletService(): WalletService {
       return readBalances(uid);
     },
 
+    /**
+     * Live prices from `exchange_rates`, which /api/rates refreshes from
+     * CoinGecko every five minutes. The signature promises every coin, so the
+     * fixture seed fills any gap — a failed read or a coin the feed dropped.
+     */
     async getRates() {
-      // INTEGRATION POINT: a real build polls a price feed here.
-      return RATES;
+      const { data } = await supabase.from("exchange_rates").select("coin, usd_price");
+      if (!data || data.length === 0) return RATES;
+
+      const rates = { ...RATES };
+      for (const row of data) {
+        const price = Number(row.usd_price);
+        if (Number.isFinite(price) && price > 0) rates[row.coin] = price;
+      }
+      return rates;
     },
 
     async getDepositAddress(coin, network) {

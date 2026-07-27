@@ -18,6 +18,8 @@
     "search": "Search",
     "viewAll": "View all",
     "showMore": "Show more",
+    "loadMore": "Load more",
+    "showingOf": "Showing {from}–{to} of {total}",
     "comingSoon": "Coming soon",
     "demo": "Demo",
     "back": "Back",
@@ -193,6 +195,7 @@
     "type": "Type",
     "noTransactions": "No transactions yet",
     "noTransactionsHint": "Deposits, withdrawals, bets and bonuses will appear here.",
+    "txCount": "{count, plural, one {# transaction} other {# transactions}}",
     "showFiat": "Show fiat value",
     "displayCurrency": "Display currency"
   },
@@ -334,7 +337,8 @@
     "noBetsHint": "Your sports bets will appear here.",
     "settleNote": "Demo: bets settle automatically about 2 minutes after placement.",
     "betWonToast": "Bet won! +{amount} {coin}",
-    "selectionsCount": "{count, plural, one {# selection} other {# selections}}"
+    "selectionsCount": "{count, plural, one {# selection} other {# selections}}",
+    "betsCount": "{count, plural, one {# bet} other {# bets}}"
   },
   "profile": {
     "memberSince": "Member since {date}",
@@ -502,7 +506,9 @@
     "wagered": "Wagered",
     "prize": "Prize",
     "you": "you",
-    "prizeNote": "Prizes shown in USDT. Demo table — opponents are simulated."
+    "emptyTitle": "The table is still empty",
+    "emptyDescription": "Nobody has placed a bet in this period yet — the first wager takes the lead.",
+    "prizeNote": "Prizes shown in USDT. Wagering volume is priced in USD at current rates."
   },
   "home": {
     "heroTitle": "Crypto casino & sportsbook, done right",
@@ -543,7 +549,8 @@
     "botName": "Casino Assistant",
     "placeholder": "Type a message…",
     "send": "Send",
-    "typing": "typing…"
+    "typing": "typing…",
+    "unread": "{count, plural, one {# new message} other {# new messages}}"
   },
   "contact": {
     "subtitle": "Send us a message. In this demo the form simulates a support request.",

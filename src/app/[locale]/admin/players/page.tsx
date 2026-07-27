@@ -5,6 +5,7 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { AccountStatus, ProfileRow, UserRole } from "@/lib/supabase/types";
 import { requireStaff } from "@/components/admin/guard";
+import { loadRates } from "@/components/admin/data";
 import { AdminPageHeader } from "@/components/admin/Panels";
 import { AdminFilters } from "@/components/admin/AdminFilters";
 import { Pagination } from "@/components/admin/Pagination";
@@ -72,19 +73,22 @@ export default async function AdminPlayersPage({
   // Balances for the visible page only, converted to a USDT-equivalent total.
   const totals = new Map<string, number>();
   if (players.length > 0) {
-    const { data: balances } = await supabase
-      .from("balances")
-      .select("user_id, coin, amount")
-      .in(
-        "user_id",
-        players.map((p) => p.id),
-      )
-      .gt("amount", 0);
+    const [{ data: balances }, rates] = await Promise.all([
+      supabase
+        .from("balances")
+        .select("user_id, coin, amount")
+        .in(
+          "user_id",
+          players.map((p) => p.id),
+        )
+        .gt("amount", 0),
+      loadRates(supabase),
+    ]);
 
     for (const balance of balances ?? []) {
       totals.set(
         balance.user_id,
-        (totals.get(balance.user_id) ?? 0) + usdtValue(balance.coin, balance.amount),
+        (totals.get(balance.user_id) ?? 0) + usdtValue(balance.coin, balance.amount, rates),
       );
     }
   }

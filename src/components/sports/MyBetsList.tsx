@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Ticket } from "lucide-react";
 import { services } from "@/services";
-import { useAsync } from "@/hooks/useAsync";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useAuthStore } from "@/stores/authStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LoadMore } from "@/components/ui/LoadMore";
 import { Badge } from "@/components/ui/Badge";
 import { CoinIcon } from "@/components/wallet/CoinIcon";
 import { formatOdds } from "@/lib/odds";
@@ -79,17 +80,27 @@ function BetCard({ bet, compact }: { bet: Bet; compact?: boolean }) {
   );
 }
 
+const PAGE_SIZE = 10;
+
 export function MyBetsList({ compact = false }: { compact?: boolean }) {
   const t = useTranslations("sports");
   const status = useAuthStore((s) => s.status);
   const [filter, setFilter] = useState<"all" | "open" | "settled">("all");
+  const authed = status === "authed";
 
-  const { data, loading } = useAsync(async () => {
-    if (status !== "authed") return null;
-    return services.sports.getMyBets(filter === "all" ? {} : { status: filter });
-  }, [status, filter]);
+  const { items, total, loading, loadingMore, loadMore } = usePaginatedList<Bet>(
+    async (page) =>
+      authed
+        ? services.sports.getMyBets(
+            filter === "all"
+              ? { page, pageSize: PAGE_SIZE }
+              : { status: filter, page, pageSize: PAGE_SIZE },
+          )
+        : null,
+    [authed, filter],
+  );
 
-  if (status !== "authed") {
+  if (!authed) {
     return <EmptyState icon={Ticket} title={t("loginToBet")} className="border-0" />;
   }
 
@@ -112,7 +123,7 @@ export function MyBetsList({ compact = false }: { compact?: boolean }) {
             <Skeleton key={i} className="h-28 w-full rounded-xl" />
           ))}
         </div>
-      ) : !data || data.items.length === 0 ? (
+      ) : items.length === 0 ? (
         <EmptyState
           icon={Ticket}
           title={t("noBets")}
@@ -121,12 +132,24 @@ export function MyBetsList({ compact = false }: { compact?: boolean }) {
         />
       ) : (
         <>
-          <p className="text-[11px] leading-relaxed text-content-disabled">{t("settleNote")}</p>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-[11px] leading-relaxed">
+            <p className="min-w-0 flex-1 text-content-disabled">{t("settleNote")}</p>
+            <span className="shrink-0 tabular-nums text-content-tertiary">
+              {t("betsCount", { count: total })}
+            </span>
+          </div>
           <div className="space-y-2">
-            {data.items.map((bet) => (
+            {items.map((bet) => (
               <BetCard key={bet.id} bet={bet} compact={compact} />
             ))}
           </div>
+          <LoadMore
+            size="sm"
+            loaded={items.length}
+            total={total}
+            loading={loadingMore}
+            onLoadMore={loadMore}
+          />
         </>
       )}
     </div>

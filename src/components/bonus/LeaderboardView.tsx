@@ -9,6 +9,7 @@ import { useCountdown } from "@/hooks/useCountdown";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { formatCompact } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
@@ -58,6 +59,8 @@ export function LeaderboardView() {
     [period],
   );
 
+  const entries = rows ?? [];
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -74,6 +77,8 @@ export function LeaderboardView() {
 
       {loading ? (
         <Skeleton className="h-[560px] w-full rounded-xl" />
+      ) : entries.length === 0 ? (
+        <EmptyState icon={Trophy} title={t("emptyTitle")} description={t("emptyDescription")} />
       ) : (
         <div className="overflow-hidden rounded-xl border border-line bg-surface-1">
           <table className="w-full text-left text-[13px]">
@@ -86,7 +91,7 @@ export function LeaderboardView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
-              {(rows ?? []).map((row) => (
+              {entries.map((row) => (
                 <tr key={row.rank} className={cn(row.isCurrentUser && "bg-accent-soft/40")}>
                   <td className="px-4 py-2.5">
                     {row.rank <= 3 ? (

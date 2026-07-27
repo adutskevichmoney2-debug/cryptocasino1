@@ -9,10 +9,9 @@ import type {
 } from "../types";
 import { fail, ok } from "../types";
 import { PROMOTIONS, VIP_LEVELS } from "../mock/fixtures/promotions";
-import { periodStart, RACE_PRIZE_POOL, RACE_SIZE, vipStatusFor } from "../shared/bonus";
+import { RACE_PRIZE_POOL, RACE_SIZE, vipStatusFor } from "../shared/bonus";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { UserBonusRow } from "@/lib/supabase/types";
-import { maskNickname } from "@/lib/format";
 import { currentUserId } from "./auth.supabase";
 import { errorCode, failFrom } from "./errors";
 
@@ -83,50 +82,36 @@ export function createBonusService(): BonusService {
     },
 
     /**
-     * Aggregated client-side from `bets`. The bets and profiles RLS policies
-     * scope reads to the caller, so an ordinary player currently only ranks
-     * themselves — a leaderboard view or SECURITY DEFINER aggregate is the
-     * server-side piece still to be added.
+     * Ranked in SQL. `leaderboard` is SECURITY DEFINER because RLS scopes bets
+     * and profiles to their owner — aggregating in the browser ranked the caller
+     * against nobody. It masks nicknames and returns wagering volume already
+     * priced in USD, so the only work left here is attaching the prize ladder.
      */
     async getLeaderboard(period): Promise<LeaderboardEntry[]> {
-      const uid = await currentUserId();
-      const { data } = await supabase
-        .from("bets")
-        .select("user_id, stake")
-        .gte("created_at", periodStart(period).toISOString());
+      try {
+        const { data, error } = await supabase.rpc("leaderboard", { p_period: period });
+        if (error || !data) return [];
 
-      const totals = new Map<string, number>();
-      for (const row of data ?? []) {
-        totals.set(row.user_id, (totals.get(row.user_id) ?? 0) + Number(row.stake));
+        return data.slice(0, RACE_SIZE).map((row) => {
+          const rank = Number(row.rank);
+          return {
+            rank,
+            nickname: row.nickname,
+            wagered: Number(row.wagered),
+            prize: RACE_PRIZE_POOL[rank - 1] ?? 0,
+            isCurrentUser: row.is_current_user,
+          };
+        });
+      } catch {
+        return [];
       }
-
-      const ranked = [...totals.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, RACE_SIZE);
-      if (ranked.length === 0) return [];
-
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, nickname")
-        .in(
-          "id",
-          ranked.map(([id]) => id),
-        );
-      const nicknames = new Map((profiles ?? []).map((p) => [p.id, p.nickname]));
-
-      return ranked.map(([userId, wagered], i) => ({
-        rank: i + 1,
-        nickname: maskNickname(nicknames.get(userId) ?? "player"),
-        wagered,
-        prize: RACE_PRIZE_POOL[i] ?? 0,
-        isCurrentUser: userId === uid,
-      }));
     },
 
     /**
-     * Signups are counted from `profiles.referred_by`. The profiles policy only
-     * exposes the caller's own row, so this reads 0 until a counter column or a
-     * SECURITY DEFINER function exposes the aggregate.
+     * Signup counts come from `referral_stats`, which is SECURITY DEFINER: the
+     * profiles policy exposes only the caller's own row, so counting referred
+     * accounts is impossible from the client. Earnings stay a direct read —
+     * they are the caller's own ledger rows.
      */
     async getReferralInfo(): Promise<ReferralInfo> {
       const uid = await currentUserId();
@@ -147,11 +132,9 @@ export function createBonusService(): BonusService {
         .maybeSingle();
       if (!profile) return empty;
 
-      const { count } = await supabase
-        .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .eq("referred_by", profile.ref_code);
-      const signups = count ?? 0;
+      // Set-returning function: one row, or none if the RPC failed.
+      const { data: stats } = await supabase.rpc("referral_stats");
+      const signups = Number(stats?.[0]?.signups ?? 0);
 
       const { data: bonuses } = await supabase
         .from("transactions")
@@ -164,7 +147,8 @@ export function createBonusService(): BonusService {
       return {
         code: profile.ref_code,
         link: `${REFERRAL_BASE}/?ref=${profile.ref_code}`,
-        // Click-through tracking needs an analytics table that does not exist yet.
+        // No data source: counting link opens needs an analytics table that the
+        // schema does not have. Reported as 0 rather than estimated.
         clicks: 0,
         signups,
         earnings,

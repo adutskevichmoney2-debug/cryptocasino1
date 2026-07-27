@@ -30,6 +30,10 @@ export function AppInit() {
     void useSettingsStore.persist.rehydrate();
     void useBetslipStore.persist.rehydrate();
     void initAuth();
+    // Refreshes the exchange-rate table. The route is cached for five minutes,
+    // so the upstream price feed is called at most once per window regardless
+    // of how many visitors trigger this.
+    void fetch("/api/rates").catch(() => {});
   }, [initAuth]);
 
   // Wallet, notifications and favorites are per-user, so they reload whenever the session changes

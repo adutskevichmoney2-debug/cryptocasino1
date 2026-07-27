@@ -20,7 +20,7 @@ import type {
   TransactionRow,
 } from "@/lib/supabase/types";
 import { requireStaff } from "@/components/admin/guard";
-import { loadProfiles } from "@/components/admin/data";
+import { loadProfiles, loadRates } from "@/components/admin/data";
 import { AdminPageHeader, Section, StatTile } from "@/components/admin/Panels";
 import { EmptyRow, RowLink, Table, TableScroller, Td, Th, Tr } from "@/components/admin/Table";
 import { TicketPriorityBadge, TicketStatusBadge, TxStatusBadge } from "@/components/admin/badges";
@@ -43,7 +43,7 @@ export default async function AdminDashboardPage({
 
   const supabase = await getSupabaseServerClient();
 
-  const [statsResult, pendingResult, ticketsResult] = await Promise.all([
+  const [statsResult, pendingResult, ticketsResult, rates] = await Promise.all([
     supabase.rpc("admin_dashboard_stats"),
     supabase
       .from("transactions")
@@ -57,6 +57,7 @@ export default async function AdminDashboardPage({
       .in("status", ["open", "pending"])
       .order("updated_at", { ascending: false })
       .limit(10),
+    loadRates(supabase),
   ]);
 
   const stats = (statsResult.data ?? null) as AdminDashboardStats | null;
@@ -181,7 +182,7 @@ export default async function AdminDashboardPage({
                         <Td className="text-right font-semibold tabular-nums text-content">
                           {fmtAmount(tx.amount)} {tx.coin}
                           <span className="ml-1.5 text-[11px] font-normal text-content-tertiary">
-                            ≈ {fmtUsdt(usdtValue(tx.coin, tx.amount))} USDT
+                            ≈ {fmtUsdt(usdtValue(tx.coin, tx.amount, rates))} USDT
                           </span>
                         </Td>
                         <Td>

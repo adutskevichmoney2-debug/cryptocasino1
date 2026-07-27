@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { shortenAddress } from "@/lib/format";
 import type { DbCoin, DbTxStatus, DbTxType, TransactionRow } from "@/lib/supabase/types";
 import { requireStaff } from "@/components/admin/guard";
-import { loadProfiles } from "@/components/admin/data";
+import { loadProfiles, loadRates } from "@/components/admin/data";
 import { AdminPageHeader } from "@/components/admin/Panels";
 import { AdminFilters } from "@/components/admin/AdminFilters";
 import { Pagination } from "@/components/admin/Pagination";
@@ -59,10 +59,13 @@ export default async function AdminTransactionsPage({
 
   const { data, count, error } = await query;
   const rows: TransactionRow[] = data ?? [];
-  const profiles = await loadProfiles(
-    supabase,
-    rows.map((tx) => tx.user_id),
-  );
+  const [profiles, rates] = await Promise.all([
+    loadProfiles(
+      supabase,
+      rows.map((tx) => tx.user_id),
+    ),
+    loadRates(supabase),
+  ]);
 
   const filterValues = { status, type, coin };
   const canReview = viewer.role === "admin";
@@ -148,7 +151,7 @@ export default async function AdminTransactionsPage({
                           {fmtAmount(tx.amount)} {tx.coin}
                         </Td>
                         <Td className="text-right tabular-nums">
-                          {fmtUsdt(usdtValue(tx.coin, tx.amount))}
+                          {fmtUsdt(usdtValue(tx.coin, tx.amount, rates))}
                         </Td>
                         <Td>
                           <TxStatusBadge status={tx.status} />

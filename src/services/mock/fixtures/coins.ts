@@ -18,7 +18,14 @@ export const COINS: CoinMeta[] = [
   { coin: "DOGE", name: "Dogecoin", networks: ["DOGE"], decimals: 2, minDeposit: 30, minWithdraw: 60 },
 ];
 
-/** Indicative USD rates. A real build would poll a price feed. */
+/**
+ * Seed and fallback USD rates only.
+ *
+ * Live prices live in the `exchange_rates` table, refreshed by /api/rates from
+ * CoinGecko; these values are what the Supabase backend falls back to when that
+ * table cannot be read, and they match the seed row in migration 0010. The mock
+ * backend has no table to read, so it uses them directly.
+ */
 export const RATES: Record<Coin, number> = {
   BTC: 96400,
   ETH: 3180,

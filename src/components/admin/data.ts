@@ -1,6 +1,8 @@
 import "server-only";
 
 import type { getSupabaseServerClient } from "@/lib/supabase/server";
+import { RATES as FALLBACK_RATES } from "@/services/mock/fixtures/coins";
+import type { RateMap } from "./format";
 
 export type AdminSupabase = Awaited<ReturnType<typeof getSupabaseServerClient>>;
 
@@ -31,4 +33,24 @@ export async function loadProfiles(
     .in("id", unique);
 
   return new Map((data ?? []).map((p) => [p.id, p]));
+}
+
+/**
+ * Current USD prices for the USDT-equivalent columns, read once per page.
+ *
+ * `exchange_rates` is public reference data refreshed by /api/rates, so the
+ * anon-scoped page client can read it. Prices arrive as numeric strings. Coins
+ * the table cannot supply fall back to the seed values, matching what the
+ * player-facing wallet service does — a stale price is a smaller lie than
+ * pricing every balance at zero.
+ */
+export async function loadRates(supabase: AdminSupabase): Promise<RateMap> {
+  const { data } = await supabase.from("exchange_rates").select("coin, usd_price");
+
+  const rates: RateMap = { ...FALLBACK_RATES };
+  for (const row of data ?? []) {
+    const price = Number(row.usd_price);
+    if (Number.isFinite(price) && price > 0) rates[row.coin] = price;
+  }
+  return rates;
 }

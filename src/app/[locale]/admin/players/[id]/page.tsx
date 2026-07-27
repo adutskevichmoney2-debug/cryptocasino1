@@ -15,7 +15,7 @@ import type {
   UserSessionRow,
 } from "@/lib/supabase/types";
 import { requireStaff } from "@/components/admin/guard";
-import { loadProfiles } from "@/components/admin/data";
+import { loadProfiles, loadRates } from "@/components/admin/data";
 import { Field, Section } from "@/components/admin/Panels";
 import { PlayerActions } from "@/components/admin/PlayerActions";
 import { EmptyRow, RowLink, Table, TableScroller, Td, Th, Tr } from "@/components/admin/Table";
@@ -70,45 +70,47 @@ export default async function AdminPlayerDetailPage({
   const { data: player } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
   if (!player) notFound();
 
-  const [balances, transactions, bets, rounds, sessions, bonuses, tickets] = await Promise.all([
-    supabase.from("balances").select("*").eq("user_id", id).order("coin"),
-    supabase
-      .from("transactions")
-      .select("*")
-      .eq("user_id", id)
-      .order("created_at", { ascending: false })
-      .limit(ROW_LIMIT),
-    supabase
-      .from("bets")
-      .select("*")
-      .eq("user_id", id)
-      .order("created_at", { ascending: false })
-      .limit(ROW_LIMIT),
-    supabase
-      .from("game_rounds")
-      .select("*")
-      .eq("user_id", id)
-      .order("created_at", { ascending: false })
-      .limit(ROW_LIMIT),
-    supabase
-      .from("user_sessions")
-      .select("*")
-      .eq("user_id", id)
-      .order("last_seen_at", { ascending: false })
-      .limit(ROW_LIMIT),
-    supabase
-      .from("user_bonuses")
-      .select("*")
-      .eq("user_id", id)
-      .order("claimed_at", { ascending: false })
-      .limit(ROW_LIMIT),
-    supabase
-      .from("support_tickets")
-      .select("*")
-      .eq("user_id", id)
-      .order("updated_at", { ascending: false })
-      .limit(ROW_LIMIT),
-  ]);
+  const [balances, transactions, bets, rounds, sessions, bonuses, tickets, rates] =
+    await Promise.all([
+      supabase.from("balances").select("*").eq("user_id", id).order("coin"),
+      supabase
+        .from("transactions")
+        .select("*")
+        .eq("user_id", id)
+        .order("created_at", { ascending: false })
+        .limit(ROW_LIMIT),
+      supabase
+        .from("bets")
+        .select("*")
+        .eq("user_id", id)
+        .order("created_at", { ascending: false })
+        .limit(ROW_LIMIT),
+      supabase
+        .from("game_rounds")
+        .select("*")
+        .eq("user_id", id)
+        .order("created_at", { ascending: false })
+        .limit(ROW_LIMIT),
+      supabase
+        .from("user_sessions")
+        .select("*")
+        .eq("user_id", id)
+        .order("last_seen_at", { ascending: false })
+        .limit(ROW_LIMIT),
+      supabase
+        .from("user_bonuses")
+        .select("*")
+        .eq("user_id", id)
+        .order("claimed_at", { ascending: false })
+        .limit(ROW_LIMIT),
+      supabase
+        .from("support_tickets")
+        .select("*")
+        .eq("user_id", id)
+        .order("updated_at", { ascending: false })
+        .limit(ROW_LIMIT),
+      loadRates(supabase),
+    ]);
 
   const staffNames = await loadProfiles(supabase, [player.status_changed_by]);
   const changedBy = player.status_changed_by
@@ -124,7 +126,7 @@ export default async function AdminPlayerDetailPage({
   const ticketRows: SupportTicketRow[] = tickets.data ?? [];
 
   const totalUsdt = balanceRows.reduce(
-    (sum, balance) => sum + usdtValue(balance.coin, balance.amount),
+    (sum, balance) => sum + usdtValue(balance.coin, balance.amount, rates),
     0,
   );
 
@@ -229,7 +231,7 @@ export default async function AdminPlayerDetailPage({
                           {fmtAmount(balance.amount)}
                         </Td>
                         <Td className="text-right tabular-nums">
-                          {fmtUsdt(usdtValue(balance.coin, balance.amount))}
+                          {fmtUsdt(usdtValue(balance.coin, balance.amount, rates))}
                         </Td>
                         <Td className="text-content-tertiary">{fmtDateTime(balance.updated_at)}</Td>
                       </Tr>

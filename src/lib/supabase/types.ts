@@ -208,6 +208,38 @@ export type AdminActionRow = {
   created_at: string;
 };
 
+/**
+ * Reference prices refreshed by /api/rates with the service role. Read-only for
+ * everyone else — the table has a select policy and no write policy.
+ */
+export type ExchangeRateRow = {
+  coin: DbCoin;
+  usd_price: string;
+  updated_at: string;
+};
+
+/** usd_price goes over the wire as a JSON number; it comes back as a string. */
+export type ExchangeRateInsert = {
+  coin: DbCoin;
+  usd_price: number;
+  updated_at?: string;
+};
+
+/** One row of public.leaderboard(p_period). `wagered` is a numeric — a string. */
+export type LeaderboardRow = {
+  rank: number;
+  nickname: string;
+  wagered: string;
+  is_current_user: boolean;
+};
+
+/** public.referral_stats() returns a single row for the calling user. */
+export type ReferralStatsRow = {
+  code: string;
+  signups: number;
+  active_signups: number;
+};
+
 export type AdminDashboardStats = {
   players: number;
   playersToday: number;
@@ -245,6 +277,7 @@ export type Database = {
       notifications: Table<NotificationRow>;
       user_sessions: Table<UserSessionRow>;
       admin_actions: Table<AdminActionRow>;
+      exchange_rates: Table<ExchangeRateRow, ExchangeRateInsert, Partial<ExchangeRateInsert>>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -284,6 +317,10 @@ export type Database = {
         Returns: GameRoundRow;
       };
       claim_promo_code: { Args: { p_code: string }; Returns: UserBonusRow };
+      /** Wager race, ranked across every player. Set-returning: capped at 20 rows. */
+      leaderboard: { Args: { p_period: string }; Returns: LeaderboardRow[] };
+      /** Referral counters for the caller. Set-returning: exactly one row. */
+      referral_stats: { Args: Record<string, never>; Returns: ReferralStatsRow[] };
       record_session: {
         Args: {
           p_ip: string;

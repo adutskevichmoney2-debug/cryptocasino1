@@ -4,10 +4,11 @@ import { useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { ArrowDownToLine, ArrowUpFromLine, Dice5, Gift, ReceiptText, Trophy } from "lucide-react";
 import { services } from "@/services";
-import { useAsync } from "@/hooks/useAsync";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LoadMore } from "@/components/ui/LoadMore";
 import { Badge } from "@/components/ui/Badge";
 import { CoinIcon } from "./CoinIcon";
 import { formatCrypto, shortenAddress } from "@/lib/format";
@@ -83,13 +84,18 @@ function TxRow({ tx }: { tx: Transaction }) {
   );
 }
 
+const PAGE_SIZE = 20;
+
 export function TransactionsView() {
   const t = useTranslations("wallet");
   const tCommon = useTranslations("common");
   const [type, setType] = useState<"all" | TxType>("all");
 
-  const { data, loading } = useAsync(
-    () => services.wallet.getTransactions(type === "all" ? {} : { type }),
+  const { items, total, loading, loadingMore, loadMore } = usePaginatedList<Transaction>(
+    (page) =>
+      services.wallet.getTransactions(
+        type === "all" ? { page, pageSize: PAGE_SIZE } : { type, page, pageSize: PAGE_SIZE },
+      ),
     [type],
   );
 
@@ -117,14 +123,20 @@ export function TransactionsView() {
             <Skeleton key={i} className="h-16 w-full" />
           ))}
         </div>
-      ) : !data || data.items.length === 0 ? (
+      ) : items.length === 0 ? (
         <EmptyState icon={ReceiptText} title={t("noTransactions")} description={t("noTransactionsHint")} />
       ) : (
-        <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface-1">
-          {data.items.map((tx) => (
-            <TxRow key={tx.id} tx={tx} />
-          ))}
-        </ul>
+        <>
+          <p className="text-[13px] tabular-nums text-content-tertiary">
+            {t("txCount", { count: total })}
+          </p>
+          <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface-1">
+            {items.map((tx) => (
+              <TxRow key={tx.id} tx={tx} />
+            ))}
+          </ul>
+          <LoadMore loaded={items.length} total={total} loading={loadingMore} onLoadMore={loadMore} />
+        </>
       )}
     </div>
   );

@@ -7,7 +7,6 @@
  * relative times take a label callback from the caller's translator.
  */
 import { formatCrypto } from "@/lib/format";
-import { RATES } from "@/services/mock/fixtures/coins";
 import type { DbCoin } from "@/lib/supabase/types";
 
 const DATE_TIME = new Intl.DateTimeFormat("en-GB", {
@@ -64,9 +63,22 @@ export function fmtAmount(value: string | number | null | undefined, decimals = 
   return formatCrypto(num(value), decimals);
 }
 
-/** Indicative USDT value of a coin amount, using the shared rate table. */
-export function usdtValue(coin: DbCoin, amount: string | number | null | undefined): number {
-  return num(amount) * (RATES[coin] ?? 0);
+/**
+ * Live USD prices, keyed by coin. Partial on purpose: a coin the price feed has
+ * not delivered yet is priced at zero rather than at a stale guess.
+ */
+export type RateMap = Partial<Record<DbCoin, number>>;
+
+/**
+ * USDT value of a coin amount. Rates are passed in rather than imported so the
+ * whole page prices off one snapshot of `exchange_rates` — see loadRates().
+ */
+export function usdtValue(
+  coin: DbCoin,
+  amount: string | number | null | undefined,
+  rates: RateMap,
+): number {
+  return num(amount) * (rates[coin] ?? 0);
 }
 
 export function fmtUsdt(value: number): string {
